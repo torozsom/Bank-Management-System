@@ -96,8 +96,9 @@ public class LoginWindow extends JFrame {
             String password = new String(passwordField.getPassword());
             try {
                 if (userManager.authenticateUser(email, password)) {
-                    JOptionPane.showMessageDialog(null, "Login successful!");
                     dispose();
+                    String[] s = email.split("@");
+                    new MainWindow(s[0]);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid email or password.");
                 }
@@ -118,10 +119,4 @@ public class LoginWindow extends JFrame {
 
         setVisible(true);
     }
-
-    public static void main(String[] args) throws SQLException {
-        new LoginWindow();
-    }
-
-
 }

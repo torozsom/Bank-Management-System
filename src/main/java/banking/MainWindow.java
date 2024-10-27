@@ -4,23 +4,23 @@ import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
 
+
+
 public class MainWindow extends JFrame {
 
     private final JScrollPane scrollPane;
     private final JPanel contentPanel;
-    private final JPanel sidebar;
-    private boolean isSidebarVisible;
 
 
 
     public MainWindow(String username) {
-
         setTitle(username);
-        setSize(800, 500);
+        setSize(900, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
+        createMenuBar();
 
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
@@ -28,69 +28,65 @@ public class MainWindow extends JFrame {
         for (int i = 0; i < 5; i++) {
             JLabel label = new JLabel("Content Section " + (i + 1));
             label.setFont(new Font("Arial", Font.BOLD, 16));
-            label.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20)); // Keep your 300px bottom padding
+            label.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20)); // Keep 300px bottom padding
             contentPanel.add(label);
         }
-
 
         scrollPane = new JScrollPane(contentPanel);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 
         JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
         verticalScrollBar.setUnitIncrement(10);
+        setContentPane(scrollPane);
 
-
-        sidebar = new JPanel();
-        isSidebarVisible = true;
-        sidebar.setLayout(new BoxLayout(sidebar, BoxLayout.Y_AXIS));
-        sidebar.setPreferredSize(new Dimension(122, 0));
-
-        for (int i = 0; i < 5; i++) {
-            JButton sectionButton = new JButton("Go to Section " + (i + 1));
-            final int index = i;
-            sectionButton.addActionListener(e -> scrollToSection(index));
-            sidebar.add(sectionButton);
-        }
-
-
-        JButton toggleSidebarButton = new JButton("☰");
-        toggleSidebarButton.addActionListener(e -> toggleSidebar());
-
-
-        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, sidebar, scrollPane);
-        splitPane.setDividerSize(0);
-        splitPane.setDividerLocation(122);
-        splitPane.setEnabled(false);
-
-
-        JPanel topPanel = new JPanel(new BorderLayout());
-        topPanel.add(toggleSidebarButton, BorderLayout.WEST);
-        topPanel.add(splitPane, BorderLayout.CENTER);
-
-        setContentPane(topPanel);
         setVisible(true);
     }
 
 
-    private void toggleSidebar() {
-        isSidebarVisible = !isSidebarVisible;
-        if (isSidebarVisible) {
-            ((JSplitPane) getContentPane().getComponent(1)).setDividerLocation(122);
-        } else {
-            ((JSplitPane) getContentPane().getComponent(1)).setDividerLocation(0);
+    private void createMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        JMenu fileMenu = new JMenu("File");
+
+        JMenuItem exitItem = new JMenuItem("Exit");
+        exitItem.addActionListener(e -> System.exit(0));
+        fileMenu.add(exitItem);
+
+        JMenuItem logOutItem = new JMenuItem("Log Out");
+        logOutItem.addActionListener(e -> {
+            dispose();
+            try {
+                new LoginWindow();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
+        });
+        fileMenu.add(logOutItem);
+
+
+        JMenu navigationMenu = new JMenu("Navigáció");
+        for (int i = 0; i < 5; i++) {
+            int sectionIndex = i;
+            JMenuItem sectionItem = new JMenuItem("Ugrás a(z) " + (sectionIndex + 1) + ". szekcióra");
+            sectionItem.addActionListener(e -> scrollToSection(sectionIndex));
+            navigationMenu.add(sectionItem);
         }
+
+        menuBar.add(fileMenu);
+        menuBar.add(navigationMenu);
+
+        setJMenuBar(menuBar);
     }
 
 
     private void scrollToSection(int index) {
         Rectangle sectionBounds = contentPanel.getComponent(index).getBounds();
-        int scrollPosition = sectionBounds.y - scrollPane.getVerticalScrollBar().getModel().getExtent() / 2;
-        scrollPosition = Math.max(0, scrollPosition);
-        scrollPane.getVerticalScrollBar().setValue(scrollPosition);
+        scrollPane.getViewport().setViewPosition(new Point(sectionBounds.x, sectionBounds.y));
     }
+
+
+
 
     public static void main(String[] args) throws SQLException {
         new LoginWindow();
     }
 }
-

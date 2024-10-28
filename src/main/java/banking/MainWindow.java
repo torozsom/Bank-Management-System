@@ -63,10 +63,10 @@ public class MainWindow extends JFrame {
         fileMenu.add(logOutItem);
 
 
-        JMenu navigationMenu = new JMenu("Navigáció");
+        JMenu navigationMenu = new JMenu("Navigation");
         for (int i = 0; i < 5; i++) {
             int sectionIndex = i;
-            JMenuItem sectionItem = new JMenuItem("Ugrás a(z) " + (sectionIndex + 1) + ". szekcióra");
+            JMenuItem sectionItem = new JMenuItem("Section " + (sectionIndex + 1) + ".");
             sectionItem.addActionListener(e -> scrollToSection(sectionIndex));
             navigationMenu.add(sectionItem);
         }

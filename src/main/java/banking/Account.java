@@ -1,17 +1,27 @@
 package banking;
 
+import java.util.Random;
+
 public class Account {
 
-    private final int accountNumber;
-    private final double balance;
-    private boolean isFrozen  = false;
+    private int accountNumber;
+    private double balance;
+    private boolean isFrozen;
 
 
+    public Account() {
+        Random rand = new Random();
+        accountNumber = rand.nextInt(10000000, 99999999);
+        balance = 0.0;
+        isFrozen = false;
+    }
 
-    public Account(int a, double b, boolean f) {
-        accountNumber = a;
+
+    public Account(double b) {
+        Random rand = new Random();
+        accountNumber = rand.nextInt(10000000, 99999999);
         balance = b;
-        isFrozen = f;
+        isFrozen = false;
     }
 
     public int getAccountNumber() { return accountNumber; }

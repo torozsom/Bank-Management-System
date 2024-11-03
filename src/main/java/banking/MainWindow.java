@@ -5,14 +5,14 @@ import java.awt.*;
 import java.sql.SQLException;
 
 
-
 public class MainWindow extends JFrame {
 
     private final JScrollPane scrollPane;
     private final JPanel contentPanel;
 
 
-
+    /// Creates and shows the main window
+    /// of the app with the username as title
     public MainWindow(String username) {
         setTitle(username);
         setSize(900, 600);
@@ -28,7 +28,7 @@ public class MainWindow extends JFrame {
         for (int i = 0; i < 5; i++) {
             JLabel label = new JLabel("Content Section " + (i + 1));
             label.setFont(new Font("Arial", Font.BOLD, 16));
-            label.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20)); // Keep 300px bottom padding
+            label.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
             contentPanel.add(label);
         }
 
@@ -42,6 +42,9 @@ public class MainWindow extends JFrame {
         setVisible(true);
     }
 
+    public static void main(String[] args) throws SQLException {
+        new LoginWindow();
+    }
 
     private void createMenuBar() {
         JMenuBar menuBar = new JMenuBar();
@@ -52,6 +55,8 @@ public class MainWindow extends JFrame {
         fileMenu.add(exitItem);
 
         JMenuItem logOutItem = new JMenuItem("Log Out");
+
+        //Logs out when clicked and gets back to the login window
         logOutItem.addActionListener(e -> {
             dispose();
             try {
@@ -60,14 +65,15 @@ public class MainWindow extends JFrame {
                 throw new RuntimeException(ex);
             }
         });
+
         fileMenu.add(logOutItem);
 
 
-        JMenu navigationMenu = new JMenu("Navigation");
+        JMenu navigationMenu = new JMenu("View");
         for (int i = 0; i < 5; i++) {
             int sectionIndex = i;
             JMenuItem sectionItem = new JMenuItem("Section " + (sectionIndex + 1) + ".");
-            sectionItem.addActionListener(e -> scrollToSection(sectionIndex));
+            sectionItem.addActionListener(e -> scrollToSection(sectionIndex)); //Jumps to the specified section
             navigationMenu.add(sectionItem);
         }
 
@@ -77,16 +83,13 @@ public class MainWindow extends JFrame {
         setJMenuBar(menuBar);
     }
 
-
+    /**
+     * Jump to the specified section of the main window
+     *
+     * @param index the
+     */
     private void scrollToSection(int index) {
         Rectangle sectionBounds = contentPanel.getComponent(index).getBounds();
         scrollPane.getViewport().setViewPosition(new Point(sectionBounds.x, sectionBounds.y));
-    }
-
-
-
-
-    public static void main(String[] args) throws SQLException {
-        new LoginWindow();
     }
 }

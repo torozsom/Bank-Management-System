@@ -21,7 +21,7 @@ public class LoginWindow extends JFrame {
     private final Image icon;
 
 
-
+    /// Creates and shows the login window of the app.
     public LoginWindow() throws SQLException {
         userManager = new UserManager();
 
@@ -91,6 +91,9 @@ public class LoginWindow extends JFrame {
         add(contentPanel);
 
 
+        //When the login button is clicked, the data entered will be authenticated
+        //Proceed to the main window when everything is validated
+        //Otherwise show warning message
         loginButton.addActionListener(e -> {
             String email = emailField.getText();
             String password = new String(passwordField.getPassword());
@@ -100,7 +103,7 @@ public class LoginWindow extends JFrame {
                     String[] s = email.split("@");
                     new MainWindow(s[0]);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Invalid email or password.");
+                    JOptionPane.showMessageDialog(null, "Invalid email or password.", "WARNING", JOptionPane.WARNING_MESSAGE);
                 }
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
@@ -108,6 +111,7 @@ public class LoginWindow extends JFrame {
         });
 
 
+        //Proceed to the registation window when clicking the registry button
         registerButton.addActionListener(e -> {
             try {
                 new RegistrationWindow();

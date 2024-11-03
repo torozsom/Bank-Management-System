@@ -1,6 +1,6 @@
 # Bank Management System
 
-A Java-based **Bank Management System** designed to manage user accounts, perform transactions, and validate data using a SQLite database. This project implements key concepts of Java programming, including **Swing GUI**, **collections**, **file I/O**, **JUnit testing**, and **regex validation**.
+A Java-based **Bank Management System** designed to manage user accounts, perform transactions, and validate data using a SQLite database. This project implements key concepts of Java programming, including **Swing GUI**, **collections**, **file I/O**, **JUnit testing**, and **regex validation**. This is also my homework for the programming course in my 3. semester of university.
 
 ## Features
 

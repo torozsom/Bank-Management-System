@@ -3,10 +3,13 @@ package banking;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 public class RegistrationWindow extends JFrame {
 
     private final UserManager userManager;
+    private final AccountManager accountManager;
 
     private final JTextField emailField;
     private final JPasswordField passwordField;
@@ -22,8 +25,15 @@ public class RegistrationWindow extends JFrame {
     private final Image icon;
 
 
+    /**
+     * Opens the registration window to
+     * sing up an account for banking.
+     *
+     * @throws SQLException when connection is unsuccesful
+     */
     public RegistrationWindow() throws SQLException {
 
+        accountManager = new AccountManager();
         userManager = new UserManager();
 
         setTitle("Bank Account - Registration");
@@ -132,22 +142,79 @@ public class RegistrationWindow extends JFrame {
     }
 
 
+    public boolean validEmailAddress(String email) {
+
+        String[] emailSections = email.split("@");
+        String username = emailSections[0];
+        String service = emailSections[1].split("\\.")[0];
+        String domain = emailSections[1].split("\\.")[1];
+
+        boolean validUsername = username.matches(UserManager.USERNAME_REGEX);
+        boolean validService = service.matches(UserManager.SERVICE_REGEX);
+        boolean validDomain = domain.matches(UserManager.DOMAIN_REGEX);
+        boolean oneAtCharacter = emailSections.length == 2;
+
+        return validUsername && validService && validDomain && oneAtCharacter;
+    }
+
+
+    /**
+     * Validates the data entered by the user.
+     *
+     * @throws SQLException
+     * @1 Checks the format of the email address
+     * @2 Checks if the email address is already in use
+     * @3 Checks if the password was correctly confirmed
+     */
     public void signUpCheck() throws SQLException {
+
         String email = emailField.getText();
+        email = email.trim();
         String password = new String(passwordField.getPassword());
         String confirmPassword = new String(confirmPasswordField.getPassword());
 
-        if (!password.equals(confirmPassword)) {
-            JOptionPane.showMessageDialog(null, "Passwords do not match!");
+        LocalDateTime now = LocalDateTime.now();
+        User user = new User(email, password, now);
+
+
+        if (!validEmailAddress(email)) {
+            JOptionPane.showMessageDialog(null, "Invalid email format!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        if (userManager.registerUser(email, password)) {
-            JOptionPane.showMessageDialog(null, "Succesful registration!");
+        if (password.length() < 5 || password.length() > 15) {
+            JOptionPane.showMessageDialog(null, "Password length should be between 5 and 15!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (!password.equals(confirmPassword)) {
+            JOptionPane.showMessageDialog(null, "Passwords do not match!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        if (userManager.userExists(email)) {
+            JOptionPane.showMessageDialog(null, "Email already in use!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int userID = userManager.registerUser(user);
+        if (userID > 0) {
+            JOptionPane.showMessageDialog(null, "Succesful registration!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+            Random rand = new Random();
+            int accountNumber;
+
+            do {
+                accountNumber = rand.nextInt(10000000, 99999999);
+            } while (accountManager.accountExists(accountNumber));
+
+            Account account = new Account(userID, accountNumber, 0.0, false);
+            accountManager.addAccount(account);
+            user.addAccount(account);
             dispose();
             new LoginWindow();
         } else {
-            JOptionPane.showMessageDialog(null, "Registration failed!");
+            JOptionPane.showMessageDialog(null, "Registration failed!", "ERROR", JOptionPane.ERROR_MESSAGE);
         }
     }
 

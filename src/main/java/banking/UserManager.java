@@ -1,7 +1,6 @@
 package banking;
 
 import java.sql.*;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
@@ -12,13 +11,15 @@ import java.time.format.DateTimeFormatter;
  */
 public class UserManager {
 
-    Users userList;
-    private final String dataBaseURL;
-    private final Connection connection;
-
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._]+$";
     public static final String SERVICE_REGEX = "^[a-z]+$";
     public static final String DOMAIN_REGEX = "^[a-z]{2,}$";
+
+    private final String dataBaseURL;
+    private final Connection connection;
+
+    Users userList;
+
 
 
     /**
@@ -45,27 +46,31 @@ public class UserManager {
      * Registers a user and saves its email, password and date
      * of registry in the database.
      *
-     * @param email
-     * @param password
+     * @param user the user to be registered
      * @return True when successfully registered a user and saved in the database
      * @throws SQLException when connection is unsuccessful
      */
-    public boolean registerUser(String email, String password) throws SQLException {
+    public int registerUser(User user) throws SQLException {
 
-        LocalDateTime now = LocalDateTime.now();
-        User user = new User(email, password, now);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String dateOfRegistry = now.format(formatter);
+        String dateOfRegistry = user.getDateOfRegistry().format(formatter);
 
         String query = "INSERT INTO Users (email, password, datetime) VALUES (?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setString(1, email);
-            statement.setString(2, password);
+            statement.setString(1, user.getEmail());
+            statement.setString(2, user.getPassword());
             statement.setString(3, dateOfRegistry);
             statement.executeUpdate();
-            userList.addUser(user);
-            return true;
+
+
+            ResultSet result = statement.getGeneratedKeys();
+            if (result.next()) {
+                int userID = result.getInt(1);
+                userList.addUser(user);
+                return userID;
+            }
+            return -1;
         }
     }
 
@@ -83,7 +88,7 @@ public class UserManager {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, email);
             ResultSet result = statement.executeQuery();
-            return (result.next());
+            return result.next();
         }
     }
 
@@ -106,7 +111,6 @@ public class UserManager {
 
             if (result.next()) {
                 String storedPassword = result.getString("password");
-                close();
                 return storedPassword.equals(password);
             }
 

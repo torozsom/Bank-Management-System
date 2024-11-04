@@ -9,7 +9,6 @@ public class Transaction {
     private final String date;
 
 
-
     public Transaction(Account s, Account r, double a, String c, String d) {
         sender = s;
         receiver = r;
@@ -19,9 +18,17 @@ public class Transaction {
     }
 
     public Account getSender() { return sender; }
-    public Account getReceiver() { return receiver; }
-    public double getAmount() { return amount; }
-    public String getComment() { return comment; }
-    public String getDate() { return date; }
+    public Account getReceiver() {
+        return receiver;
+    }
+    public double getAmount() {
+        return amount;
+    }
+    public String getComment() {
+        return comment;
+    }
+    public String getDate() {
+        return date;
+    }
 
 }

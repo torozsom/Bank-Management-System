@@ -3,10 +3,13 @@ package banking;
 import javax.swing.*;
 import java.awt.*;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.Random;
 
 public class RegistrationWindow extends JFrame {
 
     private final UserManager userManager;
+    private final AccountManager accountManager;
 
     private final JTextField emailField;
     private final JPasswordField passwordField;
@@ -30,6 +33,7 @@ public class RegistrationWindow extends JFrame {
      */
     public RegistrationWindow() throws SQLException {
 
+        accountManager = new AccountManager();
         userManager = new UserManager();
 
         setTitle("Bank Account - Registration");
@@ -139,6 +143,7 @@ public class RegistrationWindow extends JFrame {
 
 
     public boolean validEmailAddress(String email) {
+
         String[] emailSections = email.split("@");
         String username = emailSections[0];
         String service = emailSections[1].split("\\.")[0];
@@ -168,6 +173,10 @@ public class RegistrationWindow extends JFrame {
         String password = new String(passwordField.getPassword());
         String confirmPassword = new String(confirmPasswordField.getPassword());
 
+        LocalDateTime now = LocalDateTime.now();
+        User user = new User(email, password, now);
+
+
         if (!validEmailAddress(email)) {
             JOptionPane.showMessageDialog(null, "Invalid email format!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
@@ -188,8 +197,20 @@ public class RegistrationWindow extends JFrame {
             return;
         }
 
-        if (userManager.registerUser(email, password)) {
+        int userID = userManager.registerUser(user);
+        if (userID > 0) {
             JOptionPane.showMessageDialog(null, "Succesful registration!", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+            Random rand = new Random();
+            int accountNumber;
+
+            do {
+                accountNumber = rand.nextInt(10000000, 99999999);
+            } while (accountManager.accountExists(accountNumber));
+
+            Account account = new Account(userID, accountNumber, 0.0, false);
+            accountManager.addAccount(account);
+            user.addAccount(account);
             dispose();
             new LoginWindow();
         } else {

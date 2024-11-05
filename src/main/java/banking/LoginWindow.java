@@ -8,21 +8,20 @@ import java.sql.SQLException;
 public class LoginWindow extends JFrame {
 
     private final UserManager userManager;
+    private final Image icon;
 
     private final JTextField emailField;
     private final JPasswordField passwordField;
-
     private final JButton loginButton;
     private final JButton registerButton;
-
     private final JLabel emailLabel;
     private final JLabel passwordLabel;
 
-    private final Image icon;
 
 
     /// Creates and shows the login window of the app.
     public LoginWindow() throws SQLException {
+
         userManager = new UserManager();
 
         setTitle("Bank Account - Login");
@@ -100,8 +99,7 @@ public class LoginWindow extends JFrame {
             try {
                 if (userManager.authenticateUser(email, password)) {
                     dispose();
-                    String[] s = email.split("@");
-                    new MainWindow(s[0]);
+                    new MainWindow(email);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid email or password.", "WARNING", JOptionPane.WARNING_MESSAGE);
                 }

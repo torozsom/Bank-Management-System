@@ -1,20 +1,23 @@
 package banking;
 
+import java.time.LocalDateTime;
+
+
 public class Transaction {
 
     private final Account sender;
     private final Account receiver;
     private final double amount;
     private final String comment;
-    private final String date;
+    private final LocalDateTime date;
 
 
-    public Transaction(Account s, Account r, double a, String c, String d) {
+    public Transaction(Account s, Account r, double a, String c) {
         sender = s;
         receiver = r;
         amount = a;
         comment = c;
-        date = d;
+        date = LocalDateTime.now();
     }
 
     public Account getSender() { return sender; }
@@ -27,7 +30,7 @@ public class Transaction {
     public String getComment() {
         return comment;
     }
-    public String getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
 

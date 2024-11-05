@@ -33,7 +33,6 @@ public class User {
     public List<Account> getAccounts() {
         return accounts;
     }
-
     public void addAccount(Account a) {
         accounts.add(a);
     }

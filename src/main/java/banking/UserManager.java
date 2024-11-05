@@ -21,7 +21,6 @@ public class UserManager {
     Users userList;
 
 
-
     /**
      * Ctor that initializes the URL to the database
      * and sets up the connection.
@@ -50,7 +49,7 @@ public class UserManager {
      * @return True when successfully registered a user and saved in the database
      * @throws SQLException when connection is unsuccessful
      */
-    public int registerUser(User user) throws SQLException {
+    public int saveUser(User user) throws SQLException {
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfRegistry = user.getDateOfRegistry().format(formatter);
@@ -117,6 +116,9 @@ public class UserManager {
             return false;
         }
     }
+
+
+//TODO:public User getUser(String email) throws SQLException {}
 
 
     /**

@@ -3,14 +3,16 @@ package banking;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Users {
-    private List<User> users;
 
+public class Users {
+
+    private final List<User> users;
 
 
     public Users() {
-        users = new ArrayList<User>();
+        users = new ArrayList<>();
     }
+
     public Users(List<User> users) {
         this.users = users;
     }
@@ -22,7 +24,9 @@ public class Users {
     public User getFirstUser() {
         return users.getFirst();
     }
-    public User getLastUser() { return users.getLast(); }
+    public User getLastUser() {
+        return users.getLast();
+    }
 
     public void addUser(User user) {
         users.add(user);

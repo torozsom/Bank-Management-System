@@ -6,6 +6,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Random;
 
+
 public class RegistrationWindow extends JFrame {
 
     private final UserManager userManager;
@@ -37,7 +38,6 @@ public class RegistrationWindow extends JFrame {
         userManager = new UserManager();
 
         setTitle("Bank Account - Registration");
-
 
         setSize(800, 500);
         setLocationRelativeTo(null);
@@ -178,29 +178,35 @@ public class RegistrationWindow extends JFrame {
 
 
         if (!validEmailAddress(email)) {
-            JOptionPane.showMessageDialog(null, "Invalid email format!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                    "Invalid email format!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (password.length() < 5 || password.length() > 15) {
-            JOptionPane.showMessageDialog(null, "Password length should be between 5 and 15!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                    "Password length should be between 5 and 15!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            JOptionPane.showMessageDialog(null, "Passwords do not match!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                    "Passwords do not match!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         if (userManager.userExists(email)) {
-            JOptionPane.showMessageDialog(null, "Email already in use!", "WARNING", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(null,
+                    "Email already in use!", "WARNING", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        int userID = userManager.registerUser(user);
-        if (userID > 0) {
-            JOptionPane.showMessageDialog(null, "Succesful registration!", "Success", JOptionPane.INFORMATION_MESSAGE);
 
+        int userID = userManager.saveUser(user);
+        if (userID > 0) {
+
+            JOptionPane.showMessageDialog(null,
+                    "Succesful registration!", "Success", JOptionPane.INFORMATION_MESSAGE);
             Random rand = new Random();
             int accountNumber;
 
@@ -209,7 +215,7 @@ public class RegistrationWindow extends JFrame {
             } while (accountManager.accountExists(accountNumber));
 
             Account account = new Account(userID, accountNumber, 0.0, false);
-            accountManager.addAccount(account);
+            accountManager.saveAccount(account);
             user.addAccount(account);
             dispose();
             new LoginWindow();

@@ -4,6 +4,7 @@ import java.sql.*;
 
 
 public class AccountManager {
+
     private final String dataBaseURL;
     private final Connection connection;
 
@@ -14,6 +15,7 @@ public class AccountManager {
     }
 
 
+    /// Safely closes the connection to the database
     private void close() throws SQLException {
         if (connection != null && !connection.isClosed())
             connection.close();
@@ -25,7 +27,7 @@ public class AccountManager {
      * @param a the account to be inserted into the table
      * @throws SQLException when connection is unsuccessful
      */
-    public void addAccount(Account a) throws SQLException {
+    public void saveAccount(Account a) throws SQLException {
         if (accountExists(a.getAccountNumber()))
             return;
 
@@ -57,6 +59,9 @@ public class AccountManager {
             return result.next();
         }
     }
+
+
+//TODO: public Account getAccount(int accNum) throws SQLException {}
 
 
     /**

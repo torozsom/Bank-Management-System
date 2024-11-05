@@ -1,6 +1,8 @@
 package banking;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.sql.SQLException;
 
@@ -25,12 +27,31 @@ public class MainWindow extends JFrame {
         contentPanel = new JPanel();
         contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
 
-        for (int i = 0; i < 5; i++) {
-            JLabel label = new JLabel("Content Section " + (i + 1));
-            label.setFont(new Font("Arial", Font.BOLD, 16));
-            label.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
-            contentPanel.add(label);
-        }
+
+        JLabel balance = new JLabel("Balance");
+        balance.setFont(new Font("Arial", Font.BOLD, 16));
+        balance.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
+        contentPanel.add(balance);
+
+        JLabel transactionHistory = new JLabel("Transaction History");
+        transactionHistory.setFont(new Font("Arial", Font.BOLD, 16));
+        transactionHistory.setBorder(BorderFactory.createEmptyBorder(20, 20, 50, 20));
+        contentPanel.add(transactionHistory);
+
+        String[] columnNames = {"Sender", "Receiver", "Amount", "Date"};
+        DefaultTableModel model = new DefaultTableModel(columnNames, 0);
+        model.addRow(new Object[]{"Data1", "Data2", "Data3", "Data4"});
+        JTable recentTransactions = new JTable(model);
+        recentTransactions.setFont(new Font("Arial", Font.BOLD, 12));
+        recentTransactions.setRowHeight(30);
+        recentTransactions.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
+        contentPanel.add(recentTransactions);
+
+        JLabel accountActions = new JLabel("Account Actions");
+        accountActions.setFont(new Font("Arial", Font.BOLD, 16));
+        accountActions.setBorder(BorderFactory.createEmptyBorder(300, 20, 300, 20));
+        contentPanel.add(accountActions);
+
 
         scrollPane = new JScrollPane(contentPanel);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -70,12 +91,18 @@ public class MainWindow extends JFrame {
 
 
         JMenu navigationMenu = new JMenu("View");
-        for (int i = 0; i < 5; i++) {
-            int sectionIndex = i;
-            JMenuItem sectionItem = new JMenuItem("Section " + (sectionIndex + 1) + ".");
-            sectionItem.addActionListener(e -> scrollToSection(sectionIndex)); //Jumps to the specified section
-            navigationMenu.add(sectionItem);
-        }
+
+        JMenuItem balance = new JMenuItem("Balance");
+        balance.addActionListener(e -> scrollToSection(0));
+        navigationMenu.add(balance);
+
+        JMenuItem transactionHistory = new JMenuItem("Transaction History");
+        transactionHistory.addActionListener(e -> scrollToSection(1));
+        navigationMenu.add(transactionHistory);
+
+        JMenuItem accountActions = new JMenuItem("Account Actions");
+        accountActions.addActionListener(e -> scrollToSection(2));
+        navigationMenu.add(accountActions);
 
         menuBar.add(fileMenu);
         menuBar.add(navigationMenu);

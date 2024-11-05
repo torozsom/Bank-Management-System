@@ -59,4 +59,21 @@ public class AccountManager {
     }
 
 
+    /**
+     * Deletes an account from the database
+     *
+     * @param number the account number to be searched for
+     * @return True when deletion is successful, false otherwise.
+     * @throws SQLException when connection is unsuccessful
+     */
+    public boolean deleteAccount(int number) throws SQLException {
+        String query = "DELETE FROM Accounts WHERE account_number = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, number);
+            statement.executeUpdate();
+            return true;
+        }
+    }
+
 }

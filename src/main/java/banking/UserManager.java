@@ -1,6 +1,7 @@
 package banking;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
@@ -118,7 +119,33 @@ public class UserManager {
     }
 
 
-//TODO:public User getUser(String email) throws SQLException {}
+    /**
+     * Searches for a user based on the given email in the
+     * database and returns it with all its data as an object.
+     *
+     * @param email the address to be searched for
+     * @return a User object with the given email
+     * @throws SQLException when connection is unsuccessful
+     */
+    public User loadUser(String email) throws SQLException {
+        String query = "SELECT * FROM Users WHERE email = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, email);
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                int userID = result.getInt("user_id");
+                String password = result.getString("password");
+                String date = result.getString("datetime");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+                return new User(userID, email, password, localDateTime);
+            }
+            return null;
+        }
+    }
 
 
     /**

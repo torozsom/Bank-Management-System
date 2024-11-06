@@ -21,6 +21,7 @@ public class TransactionManager {
         accountManager = new AccountManager();
     }
 
+
     /// Safely closes the connection to the database
     private void close() throws SQLException {
         if (connection != null && !connection.isClosed())
@@ -52,7 +53,7 @@ public class TransactionManager {
     }
 
 
-//TODO: public Transaction getTransaction(sth) throws SQLException {}
+    //TODO: public Transaction getTransaction(sth) throws SQLException {}
 
 
 }

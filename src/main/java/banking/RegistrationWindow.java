@@ -46,7 +46,6 @@ public class RegistrationWindow extends JFrame {
         icon = Toolkit.getDefaultToolkit().getImage("icon.png");
         setIconImage(icon);
 
-
         JPanel contentPanel = new JPanel(new GridBagLayout());
         contentPanel.setBackground(Color.LIGHT_GRAY);
         GridBagConstraints gbc = new GridBagConstraints();
@@ -54,14 +53,12 @@ public class RegistrationWindow extends JFrame {
         gbc.anchor = GridBagConstraints.CENTER;
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-
         emailLabel = new JLabel("Email:");
         emailLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
         emailLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
         gbc.gridy = 0;
         contentPanel.add(emailLabel, gbc);
-
 
         emailField = new JTextField(20);
         emailField.setPreferredSize(new Dimension(300, 30));
@@ -71,14 +68,12 @@ public class RegistrationWindow extends JFrame {
         gbc.gridy = 0;
         contentPanel.add(emailField, gbc);
 
-
         passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
         passwordLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
         gbc.gridy = 1;
         contentPanel.add(passwordLabel, gbc);
-
 
         passwordField = new JPasswordField(20);
         passwordField.setPreferredSize(new Dimension(300, 30));
@@ -88,14 +83,12 @@ public class RegistrationWindow extends JFrame {
         gbc.gridy = 1;
         contentPanel.add(passwordField, gbc);
 
-
         confirmPasswordLabel = new JLabel("Confirm Password:");
         confirmPasswordLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
         confirmPasswordLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
         gbc.gridy = 2;
         contentPanel.add(confirmPasswordLabel, gbc);
-
 
         confirmPasswordField = new JPasswordField(20);
         confirmPasswordField.setPreferredSize(new Dimension(300, 30));
@@ -105,12 +98,10 @@ public class RegistrationWindow extends JFrame {
         gbc.gridy = 2;
         contentPanel.add(confirmPasswordField, gbc);
 
-
         signUpButton = new JButton("Sign Up");
         gbc.gridx = 1;
         gbc.gridy = 3;
         contentPanel.add(signUpButton, gbc);
-
 
         closeButton = new JButton("Close");
         gbc.gridx = 0;
@@ -142,6 +133,7 @@ public class RegistrationWindow extends JFrame {
     }
 
 
+    /// Validates the email address by comparing with the REGEX-es
     public boolean validEmailAddress(String email) {
 
         String[] emailSections = email.split("@");
@@ -201,10 +193,8 @@ public class RegistrationWindow extends JFrame {
             return;
         }
 
-
         int userID = userManager.saveUser(user);
         if (userID > 0) {
-
             JOptionPane.showMessageDialog(null,
                     "Succesful registration!", "Success", JOptionPane.INFORMATION_MESSAGE);
             Random rand = new Random();
@@ -216,7 +206,6 @@ public class RegistrationWindow extends JFrame {
 
             Account account = new Account(userID, accountNumber, 0.0, false);
             accountManager.saveAccount(account);
-            user.addAccount(account);
             dispose();
             new LoginWindow();
         } else {

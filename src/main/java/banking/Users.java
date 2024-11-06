@@ -12,14 +12,13 @@ public class Users {
     public Users() {
         users = new ArrayList<>();
     }
-
     public Users(List<User> users) {
         this.users = users;
     }
 
 
-    public User getUser(int id) {
-        return users.get(id);
+    public User getUser(int idx) {
+        return users.get(idx);
     }
     public User getFirstUser() {
         return users.getFirst();

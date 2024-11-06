@@ -6,6 +6,7 @@ import java.util.List;
 
 public class Account {
 
+    private int accountID;
     private final int userID;
     private final int accountNumber;
     private final double balance;
@@ -13,14 +14,27 @@ public class Account {
     private final List<Transaction> transactions;
 
 
-    public Account(int id, int num, double bal, boolean fr) {
-        userID = id;
+    public Account(int acc_id, int user_id, int num, double bal, boolean fr) {
+        accountID = acc_id;
+        userID = user_id;
         accountNumber = num;
         balance = bal;
         isFrozen = fr;
         transactions = new ArrayList<>();
     }
 
+
+    public Account(int user_id, int num, double bal, boolean fr) {
+        accountID = 0;
+        userID = user_id;
+        accountNumber = num;
+        balance = bal;
+        isFrozen = fr;
+        transactions = new ArrayList<>();
+    }
+
+
+    public int getAccountID() { return accountID; }
     public int getUserID() {
         return userID;
     }

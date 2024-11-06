@@ -1,9 +1,9 @@
 package banking;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.sql.SQLException;
+import java.util.List;
 
 
 public class MainWindow extends JFrame {
@@ -19,6 +19,7 @@ public class MainWindow extends JFrame {
     private final Image icon;
 
 
+
     /// Creates and shows the main window
     /// of the app with the username as title
     public MainWindow(String email) throws SQLException {
@@ -26,7 +27,9 @@ public class MainWindow extends JFrame {
         accountManager = new AccountManager();
         transactionManager = new TransactionManager();
 
-        //currentUser
+        currentUser = userManager.loadUser(email);
+        List<Account> accounts = accountManager.loadAccounts(currentUser.getUserID());
+        currentUser.addAllAccounts(accounts);
 
         setTitle(email);
         setSize(900, 600);
@@ -36,9 +39,11 @@ public class MainWindow extends JFrame {
         icon = Toolkit.getDefaultToolkit().getImage("icon.png");
         setIconImage(icon);
 
-
         createMenuBar();
         contentPanel = new JPanel();
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+
+        setUpBalanceSection();
         setUpContentPanel();
 
         scrollPane = new JScrollPane(contentPanel);
@@ -50,9 +55,6 @@ public class MainWindow extends JFrame {
         setVisible(true);
     }
 
-    public static void main(String[] args) throws SQLException {
-        new LoginWindow();
-    }
 
     /// Creates a menu bar with the following options:
     /// file, view, settings.
@@ -97,52 +99,79 @@ public class MainWindow extends JFrame {
         setJMenuBar(menuBar);
     }
 
-    /**
-     * Jump to the specified section of the main window
-     *
-     * @param index the
-     */
+
+    /// Jump to the specified section of the main window
     private void scrollToSection(int index) {
         Rectangle sectionBounds = contentPanel.getComponent(index).getBounds();
         scrollPane.getViewport().setViewPosition(new Point(sectionBounds.x, sectionBounds.y));
     }
 
+
     /// Introduces the content panel with the necessery components
     public void setUpContentPanel() {
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
-
-        JLabel balance = new JLabel("Balance");
-        balance.setFont(new Font("Arial", Font.BOLD, 16));
-        balance.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
-        contentPanel.add(balance);
+        JLabel accountActions = new JLabel("Account Actions");
+        accountActions.setFont(new Font("Arial", Font.BOLD, 16));
+        accountActions.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.add(accountActions);
 
         JLabel transactionHistory = new JLabel("Transaction History");
         transactionHistory.setFont(new Font("Arial", Font.BOLD, 16));
-        transactionHistory.setBorder(BorderFactory.createEmptyBorder(20, 20, 50, 20));
+        transactionHistory.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         contentPanel.add(transactionHistory);
 
         contentPanel.add(transactionsTable());
-
-        JLabel accountActions = new JLabel("Account Actions");
-        accountActions.setFont(new Font("Arial", Font.BOLD, 16));
-        accountActions.setBorder(BorderFactory.createEmptyBorder(300, 20, 20, 20));
-        contentPanel.add(accountActions);
-
     }
 
+
+    /// Introduces the account chooser and the balance contents
+    public void setUpBalanceSection() {
+        JPanel choosingPanel = new JPanel(new FlowLayout());
+
+        JLabel choose = new JLabel("Choose account:");
+        choose.setFont(new Font("Arial", Font.BOLD, 16));
+        choose.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        choosingPanel.add(choose);
+
+        List<Account> accounts = currentUser.getAccounts();
+        Integer[] accountNums = new Integer[accounts.size()];
+        for (int i = 0; i < accountNums.length; i++)
+            accountNums[i] = accounts.get(i).getAccountNumber();
+
+        JComboBox<Integer> accountSelector = new JComboBox<>(accountNums);
+        accountSelector.setPreferredSize(new Dimension(150, 30));
+        accountSelector.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        choosingPanel.add(accountSelector);
+        choosingPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        contentPanel.add(choosingPanel);
+
+        JLabel balance = new JLabel("Balance");
+        balance.setFont(new Font("Arial", Font.BOLD, 16));
+        balance.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        balance.setAlignmentX(Component.LEFT_ALIGNMENT);
+        contentPanel.add(balance);
+    }
+
+
     /// Creates a table that shows the user's transaction history
-    public JTable transactionsTable() {
+    public JScrollPane transactionsTable() {
         Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
-        DefaultTableModel model = new DefaultTableModel(headers, 0);
-        model.addRow(headers);
+        Object[][] data = new Object[][]{
+                {"data1", "data2", "data3", "data4", "data5"},
+                {"data1", "data2", "data3", "data4", "data5"}
+        };
 
-
-        JTable recentTransactions = new JTable(model);
-        recentTransactions.setFont(new Font("Arial", Font.BOLD, 12));
+        JTable recentTransactions = new JTable(data, headers);
+        recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
         recentTransactions.setRowHeight(30);
         recentTransactions.setBorder(BorderFactory.createEmptyBorder(20, 20, 300, 20));
+        recentTransactions.getTableHeader().setReorderingAllowed(false);
 
-        return recentTransactions;
+        return new JScrollPane(recentTransactions);
+    }
+
+
+    public static void main(String[] args) throws SQLException {
+        new LoginWindow();
     }
 
 }

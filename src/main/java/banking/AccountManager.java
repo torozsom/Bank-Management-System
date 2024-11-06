@@ -1,6 +1,8 @@
 package banking;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class AccountManager {
@@ -48,7 +50,7 @@ public class AccountManager {
      *
      * @param accountNumber the account number that is being searched for
      * @return True if the account number is found in the table
-     * @throws SQLException
+     * @throws SQLException when connection is unsuccessful
      */
     public boolean accountExists(int accountNumber) throws SQLException {
         String query = "SELECT * FROM Accounts WHERE account_number = ?";
@@ -61,7 +63,34 @@ public class AccountManager {
     }
 
 
-//TODO: public Account getAccount(int accNum) throws SQLException {}
+    /**
+     * Searches for accounts based on the given user id in the
+     * database and returns it with all its data as an object.
+     *
+     * @param user_id the id number that is searched for
+     * @return a List of Accounts that belong to the user with the given id
+     * @throws SQLException when connection is unsuccessful
+     */
+    public List<Account> loadAccounts(int user_id) throws SQLException {
+        String query = "SELECT * FROM Accounts WHERE user_id = ?";
+        List<Account> accounts = new ArrayList<>();
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, user_id);
+
+            try (ResultSet result = statement.executeQuery()) {
+
+                while (result.next()) {
+                    int accID = result.getInt("account_id");
+                    int accNum = result.getInt("account_number");
+                    double balance = result.getDouble("balance");
+                    boolean isFrozen = result.getBoolean("is_frozen");
+                    accounts.add(new Account(accID, user_id, accNum, balance, isFrozen));
+                }
+                return accounts;
+            }
+        }
+    }
 
 
     /**

@@ -8,7 +8,7 @@ import java.util.List;
 
 public class User {
 
-    private int userID;
+    private final int userID;
     private final String email;
     private final String password;
     private final LocalDateTime dateOfRegistry;
@@ -31,25 +31,40 @@ public class User {
         accounts = new ArrayList<>();
     }
 
-    public int getUserID() { return userID; }
+    public int getUserID() {
+        return userID;
+    }
+
     public String getEmail() {
         return email;
     }
+
     public String getPassword() {
         return password;
     }
+
     public LocalDateTime getDateOfRegistry() {
         return dateOfRegistry;
     }
+
     public List<Account> getAccounts() {
         return accounts;
     }
+
     public void addAccount(Account a) {
         accounts.add(a);
     }
-    public void addAllAccounts(List<Account> a) { accounts.addAll(a); }
+
+    public void addAllAccounts(List<Account> a) {
+        accounts.addAll(a);
+    }
+
     public void removeAccount(Account a) {
         accounts.remove(a);
+    }
+
+    public void clearAccounts() {
+        accounts.clear();
     }
 
 }

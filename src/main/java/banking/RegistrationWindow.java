@@ -110,7 +110,6 @@ public class RegistrationWindow extends JFrame {
 
         add(contentPanel);
 
-
         signUpButton.addActionListener(e -> {
             try {
                 signUpCheck();
@@ -118,7 +117,6 @@ public class RegistrationWindow extends JFrame {
                 throw new RuntimeException(ex);
             }
         });
-
 
         closeButton.addActionListener(e -> {
             dispose();
@@ -168,7 +166,6 @@ public class RegistrationWindow extends JFrame {
         LocalDateTime now = LocalDateTime.now();
         User user = new User(email, password, now);
 
-
         if (!validEmailAddress(email)) {
             JOptionPane.showMessageDialog(null,
                     "Invalid email format!", "WARNING", JOptionPane.WARNING_MESSAGE);
@@ -205,9 +202,11 @@ public class RegistrationWindow extends JFrame {
             } while (accountManager.accountExists(accountNumber));
 
             Account account = new Account(userID, accountNumber, 0.0, false);
-            accountManager.saveAccount(account);
-            dispose();
-            new LoginWindow();
+            if (accountManager.saveAccount(account)) {
+                dispose();
+                new LoginWindow();
+            } else
+                JOptionPane.showMessageDialog(null, "Registration failed!", "ERROR", JOptionPane.ERROR_MESSAGE);
         } else {
             JOptionPane.showMessageDialog(null, "Registration failed!", "ERROR", JOptionPane.ERROR_MESSAGE);
         }

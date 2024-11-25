@@ -18,7 +18,6 @@ public class LoginWindow extends JFrame {
     private final JLabel passwordLabel;
 
 
-
     /// Creates and shows the login window of the app.
     public LoginWindow() throws SQLException {
 
@@ -50,7 +49,8 @@ public class LoginWindow extends JFrame {
 
 
         emailField = new JTextField(20);
-        emailField.setPreferredSize(new Dimension(300, 30));
+        Dimension textFieldSize = new Dimension(300, 30);
+        emailField.setPreferredSize(textFieldSize);
         emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
         emailField.setFont(new Font("Times New Roman", Font.BOLD, 14));
         gbc.gridx = 1;
@@ -67,7 +67,7 @@ public class LoginWindow extends JFrame {
 
 
         passwordField = new JPasswordField(20);
-        passwordField.setPreferredSize(new Dimension(300, 30));
+        passwordField.setPreferredSize(textFieldSize);
         passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
         passwordField.setFont(new Font("Times New Roman", Font.BOLD, 14));
         gbc.gridx = 1;

@@ -19,8 +19,6 @@ public class UserManager {
     private final String dataBaseURL;
     private final Connection connection;
 
-    Users userList;
-
 
     /**
      * Ctor that initializes the URL to the database
@@ -31,7 +29,6 @@ public class UserManager {
     public UserManager() throws SQLException {
         dataBaseURL = "jdbc:sqlite:Banking.db";
         connection = DriverManager.getConnection(dataBaseURL);
-        userList = new Users();
     }
 
 
@@ -47,11 +44,10 @@ public class UserManager {
      * of registry in the database.
      *
      * @param user the user to be registered
-     * @return True when successfully registered a user and saved in the database
+     * @return The user id that is associated with the saved user in the db
      * @throws SQLException when connection is unsuccessful
      */
     public int saveUser(User user) throws SQLException {
-
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfRegistry = user.getDateOfRegistry().format(formatter);
 
@@ -63,11 +59,9 @@ public class UserManager {
             statement.setString(3, dateOfRegistry);
             statement.executeUpdate();
 
-
             ResultSet result = statement.getGeneratedKeys();
             if (result.next()) {
                 int userID = result.getInt(1);
-                userList.addUser(user);
                 return userID;
             }
             return -1;

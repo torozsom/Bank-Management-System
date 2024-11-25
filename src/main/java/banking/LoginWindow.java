@@ -8,21 +8,19 @@ import java.sql.SQLException;
 public class LoginWindow extends JFrame {
 
     private final UserManager userManager;
+    private final Image icon;
 
     private final JTextField emailField;
     private final JPasswordField passwordField;
-
     private final JButton loginButton;
     private final JButton registerButton;
-
     private final JLabel emailLabel;
     private final JLabel passwordLabel;
-
-    private final Image icon;
 
 
     /// Creates and shows the login window of the app.
     public LoginWindow() throws SQLException {
+
         userManager = new UserManager();
 
         setTitle("Bank Account - Login");
@@ -51,7 +49,8 @@ public class LoginWindow extends JFrame {
 
 
         emailField = new JTextField(20);
-        emailField.setPreferredSize(new Dimension(300, 30));
+        Dimension textFieldSize = new Dimension(300, 30);
+        emailField.setPreferredSize(textFieldSize);
         emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
         emailField.setFont(new Font("Times New Roman", Font.BOLD, 14));
         gbc.gridx = 1;
@@ -68,7 +67,7 @@ public class LoginWindow extends JFrame {
 
 
         passwordField = new JPasswordField(20);
-        passwordField.setPreferredSize(new Dimension(300, 30));
+        passwordField.setPreferredSize(textFieldSize);
         passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
         passwordField.setFont(new Font("Times New Roman", Font.BOLD, 14));
         gbc.gridx = 1;
@@ -100,8 +99,7 @@ public class LoginWindow extends JFrame {
             try {
                 if (userManager.authenticateUser(email, password)) {
                     dispose();
-                    String[] s = email.split("@");
-                    new MainWindow(s[0]);
+                    new MainWindow(email);
                 } else {
                     JOptionPane.showMessageDialog(null, "Invalid email or password.", "WARNING", JOptionPane.WARNING_MESSAGE);
                 }

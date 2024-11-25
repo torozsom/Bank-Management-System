@@ -1,14 +1,10 @@
 package banking;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-/**
- * The {@code UserManager} class handles the necessary database actions
- * and SQL queries. It saves user data on successful registry and
- * authenticates it on login attempts.
- */
 public class UserManager {
 
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._]+$";
@@ -17,9 +13,6 @@ public class UserManager {
 
     private final String dataBaseURL;
     private final Connection connection;
-
-    Users userList;
-
 
 
     /**
@@ -31,7 +24,6 @@ public class UserManager {
     public UserManager() throws SQLException {
         dataBaseURL = "jdbc:sqlite:Banking.db";
         connection = DriverManager.getConnection(dataBaseURL);
-        userList = new Users();
     }
 
 
@@ -47,11 +39,10 @@ public class UserManager {
      * of registry in the database.
      *
      * @param user the user to be registered
-     * @return True when successfully registered a user and saved in the database
+     * @return The user id that is associated with the saved user in the db
      * @throws SQLException when connection is unsuccessful
      */
-    public int registerUser(User user) throws SQLException {
-
+    public int saveUser(User user) throws SQLException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfRegistry = user.getDateOfRegistry().format(formatter);
 
@@ -63,11 +54,9 @@ public class UserManager {
             statement.setString(3, dateOfRegistry);
             statement.executeUpdate();
 
-
             ResultSet result = statement.getGeneratedKeys();
             if (result.next()) {
                 int userID = result.getInt(1);
-                userList.addUser(user);
                 return userID;
             }
             return -1;
@@ -115,6 +104,35 @@ public class UserManager {
             }
 
             return false;
+        }
+    }
+
+
+    /**
+     * Searches for a user based on the given email in the
+     * database and returns it with all its data as an object.
+     *
+     * @param email the address to be searched for
+     * @return a User object with the given email
+     * @throws SQLException when connection is unsuccessful
+     */
+    public User loadUser(String email) throws SQLException {
+        String query = "SELECT * FROM Users WHERE email = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setString(1, email);
+            ResultSet result = statement.executeQuery();
+
+            if (result.next()) {
+                int userID = result.getInt("user_id");
+                String password = result.getString("password");
+                String date = result.getString("datetime");
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
+
+                return new User(userID, email, password, localDateTime);
+            }
+            return null;
         }
     }
 

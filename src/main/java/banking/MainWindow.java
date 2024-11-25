@@ -35,7 +35,7 @@ public class MainWindow extends JFrame {
 
 
     /// Creates and shows the main window
-    /// of the app with the username as title
+    /// of the app with the email as title
     public MainWindow(String email) throws SQLException {
         userManager = new UserManager();
         accountManager = new AccountManager();
@@ -139,6 +139,7 @@ public class MainWindow extends JFrame {
         accountSelector.setPreferredSize(new Dimension(150, 30));
         accountSelector.setFont(new Font("Times New Roman", Font.BOLD, 16));
         accountSelector.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+
         accountSelector.addActionListener(e -> {
             try {
                 int selectedAccountNumber = (int) accountSelector.getSelectedItem();
@@ -175,6 +176,7 @@ public class MainWindow extends JFrame {
     }
 
 
+    ///  real-time update of data on the UI
     private void refreshPage() {
         // Update balance label
         if (currentAccount != null) {
@@ -195,45 +197,7 @@ public class MainWindow extends JFrame {
     }
 
 
-    private void updateTransactionTable() {
-        try {
-            // Reload transactions for the current account
-            if (currentAccount != null) {
-                currentAccount.setTransactions(transactionManager.loadTransactions(currentAccount));
-            }
-
-            // Remove the old transaction table from the content panel
-            for (Component component : contentPanel.getComponents()) {
-                if (component instanceof JScrollPane) {
-                    contentPanel.remove(component);
-                }
-            }
-
-            // Add a new transactions table
-            Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
-            List<Transaction> transactions = currentAccount.getTransactions();
-
-            Object[][] data = new Object[transactions.size()][5];
-            for (int i = 0; i < transactions.size(); i++) {
-                data[i][0] = transactions.get(i).getSender().getAccountNumber();
-                data[i][1] = transactions.get(i).getReceiver().getAccountNumber();
-                data[i][2] = transactions.get(i).getAmount();
-                data[i][3] = transactions.get(i).getComment();
-                data[i][4] = transactions.get(i).getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            }
-
-            JTable recentTransactions = new JTable(data, headers);
-            recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
-            recentTransactions.setRowHeight(30);
-            recentTransactions.getTableHeader().setReorderingAllowed(false);
-
-            contentPanel.add(new JScrollPane(recentTransactions));
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Error updating transactions: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-
+    /// creates the grid layout and its account action contents
     private void setUpAccountActions() {
         JPanel actionsPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -269,6 +233,7 @@ public class MainWindow extends JFrame {
         depositButton.setFont(new Font("Times New Roman", Font.BOLD, 14));
         depositButton.setPreferredSize(buttonSize);
 
+
         depositButton.addActionListener(e -> {
             try {
                 double amount = Double.parseDouble(depositField.getText());
@@ -291,7 +256,6 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, "Invalid input or error occurred.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
 
         actionsPanel.add(depositButton, gbc);
 
@@ -341,7 +305,6 @@ public class MainWindow extends JFrame {
             }
         });
 
-
         actionsPanel.add(withdrawButton, gbc);
 
 
@@ -386,7 +349,7 @@ public class MainWindow extends JFrame {
         actionsPanel.add(transferCommentField, gbc);
 
 
-        gbc.gridx = 3; // Align to the right
+        gbc.gridx = 3;
         transferButton = new JButton("Transfer");
         transferButton.setFont(new Font("Times New Roman", Font.BOLD, 14));
         transferButton.setPreferredSize(buttonSize);
@@ -414,12 +377,13 @@ public class MainWindow extends JFrame {
                     return;
                 }
 
-                // Create and save the transaction
                 Transaction transaction = new Transaction(currentAccount, destinationAccount, amount, comment, LocalDateTime.now());
                 transactionManager.saveTransaction(transaction);
                 currentAccount.withdraw(amount);
                 JOptionPane.showMessageDialog(this, "Transfer successful.", "Success", JOptionPane.INFORMATION_MESSAGE);
+
                 refreshPage();
+
                 transferAccountField.setText("");
                 transferAmountField.setText("");
                 transferCommentField.setText("");
@@ -456,9 +420,12 @@ public class MainWindow extends JFrame {
 
                 Account account = new Account(currentUser.getUserID(), accountNumber, 0.0, false);
                 if (accountManager.saveAccount(account)) {
+                    currentUser.addAccount(account);
                     updateAccountSelector();
                     JOptionPane.showMessageDialog(this, "New account has been opened successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
+
+
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
@@ -559,54 +526,70 @@ public class MainWindow extends JFrame {
                     return;
                 }
 
-                int choice = JOptionPane.showConfirmDialog(this,
-                        "Are you sure you want to close this account?\n" +
-                                (currentUser.getAccounts().size() == 1 ? "This will also delete your user profile as it's the last account." : ""),
-                        "Confirm Account Closure",
-                        JOptionPane.YES_NO_OPTION);
+                int choice;
 
-                if (choice == JOptionPane.NO_OPTION)
-                    return;
+                if (accountManager.loadAccounts(currentUser.getUserID()).size() == 1) {
+                    choice = JOptionPane.showConfirmDialog(this,
+                            "Are you sure you want to close this account?\n" +
+                                    "This will also delete your user profile as it's the last account.",
+                            "Confirm Account Closure",
+                            JOptionPane.YES_NO_OPTION);
 
-                accountManager.deleteAccount(currentAccount);
+                    if (choice == JOptionPane.NO_OPTION)
+                        return;
 
-                if (currentUser.getAccounts().size() == 1) {
+                    // Delete the account and the user profile
+                    accountManager.deleteAccount(currentAccount);
                     userManager.deleteUser(currentUser.getEmail());
 
                     JOptionPane.showMessageDialog(this,
                             "The account and user profile have been deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
+
                     // Close the current window and redirect to the login page
                     dispose();
                     new LoginWindow();
-                } else {
-                    // Only the account is deleted, refresh the page
+
+                } else if (accountManager.loadAccounts(currentUser.getUserID()).size() > 1) {
+                    choice = JOptionPane.showConfirmDialog(this,
+                            "Are you sure you want to close this account?",
+                            "Confirm Account Closure",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (choice == JOptionPane.NO_OPTION)
+                        return;
+
+
+                    accountManager.deleteAccount(currentAccount);
+                    currentUser.getAccounts().remove(currentAccount);
+
                     JOptionPane.showMessageDialog(this,
                             "The account has been deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
 
+                    // Update account selector
                     updateAccountSelector();
                 }
             } catch (SQLException ex) {
-                JOptionPane.showMessageDialog(this, "Error while closing the account: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Database error while closing the account.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
+
 
         actionsPanel.add(closeButton, gbc);
 
         contentPanel.add(actionsPanel);
     }
 
-
+    /// Refresh account selector and UI
     public void updateAccountSelector() throws SQLException {
-        // Refresh account selector and UI
         List<Account> updatedAccounts = accountManager.loadAccounts(currentUser.getUserID());
         Integer[] accountNumbers = updatedAccounts.stream().map(Account::getAccountNumber).toArray(Integer[]::new);
         accountSelector.setModel(new DefaultComboBoxModel<>(accountNumbers));
         if (accountNumbers.length > 0)
             currentAccount = accountManager.loadAccount(accountNumbers[0]);
         else
-            currentAccount = null; // No accounts left
+            currentAccount = null;
 
         refreshPage();
     }
@@ -643,6 +626,40 @@ public class MainWindow extends JFrame {
         recentTransactions.getTableHeader().setReorderingAllowed(false);
 
         contentPanel.add(new JScrollPane(recentTransactions));
+    }
+
+
+    /// updates the content of the transaction table real-time
+    private void updateTransactionTable() {
+        try {
+            if (currentAccount != null)
+                currentAccount.setTransactions(transactionManager.loadTransactions(currentAccount));
+
+            for (Component component : contentPanel.getComponents())
+                if (component instanceof JScrollPane)
+                    contentPanel.remove(component);
+
+            Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
+            List<Transaction> transactions = currentAccount.getTransactions();
+
+            Object[][] data = new Object[transactions.size()][5];
+            for (int i = 0; i < transactions.size(); i++) {
+                data[i][0] = transactions.get(i).getSender().getAccountNumber();
+                data[i][1] = transactions.get(i).getReceiver().getAccountNumber();
+                data[i][2] = transactions.get(i).getAmount();
+                data[i][3] = transactions.get(i).getComment();
+                data[i][4] = transactions.get(i).getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            }
+
+            JTable recentTransactions = new JTable(data, headers);
+            recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
+            recentTransactions.setRowHeight(30);
+            recentTransactions.getTableHeader().setReorderingAllowed(false);
+
+            contentPanel.add(new JScrollPane(recentTransactions));
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Error updating transactions: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
 

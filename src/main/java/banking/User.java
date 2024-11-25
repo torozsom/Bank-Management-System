@@ -8,7 +8,7 @@ import java.util.List;
 
 public class User {
 
-    private final int userID;
+    private int userID;
     private final String email;
     private final String password;
     private final LocalDateTime dateOfRegistry;
@@ -65,6 +65,10 @@ public class User {
 
     public void clearAccounts() {
         accounts.clear();
+    }
+
+    public void setUserID(int id) {
+        userID = id;
     }
 
 }

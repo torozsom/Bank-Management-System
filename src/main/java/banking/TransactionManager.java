@@ -28,10 +28,10 @@ public class TransactionManager {
     }
 
 
-    public void saveTransaction(Transaction transaction) throws SQLException {
+    public boolean saveTransaction(Transaction transaction) throws SQLException {
         if (!accountManager.accountExists(transaction.getSender().getAccountNumber())
                 || !accountManager.accountExists(transaction.getReceiver().getAccountNumber()))
-            return;
+            return false;
 
         String query = "INSERT INTO Transactions " +
                 "(sender_account_number, receiver_account_number, amount, comment, date) VALUES (?, ?, ?, ?, ?)";
@@ -46,7 +46,9 @@ public class TransactionManager {
             statement.setDouble(3, transaction.getAmount());
             statement.setString(4, transaction.getComment());
             statement.setString(5, dateOfTransaction);
-            statement.executeUpdate();
+
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
         }
     }
 
@@ -91,5 +93,22 @@ public class TransactionManager {
         return transactions;
     }
 
+
+    /**
+     * Deletes a transaction from the database.
+     *
+     * @param transactionID the ID of the transaction to be deleted
+     * @return true if the transaction was deleted successfully, false otherwise
+     * @throws SQLException if a database error occurs
+     */
+    public boolean deleteTransaction(int transactionID) throws SQLException {
+        String query = "DELETE FROM Transactions WHERE transaction_id = ?";
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
+            statement.setInt(1, transactionID);
+            int affectedRows = statement.executeUpdate();
+            return affectedRows > 0;
+        }
+    }
 
 }

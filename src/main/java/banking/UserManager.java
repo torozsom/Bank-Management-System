@@ -5,11 +5,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
-/**
- * The {@code UserManager} class handles the necessary database actions
- * and SQL queries. It saves user data on successful registry and
- * authenticates it on login attempts.
- */
 public class UserManager {
 
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._]+$";

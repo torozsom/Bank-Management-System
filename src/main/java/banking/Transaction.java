@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 
 public class Transaction {
 
-    private int transactionID = 0;
+    private final int transactionID;
     private final Account sender;
     private final Account receiver;
     private final double amount;
@@ -13,6 +13,7 @@ public class Transaction {
     private final LocalDateTime date;
 
     public Transaction(Account s, Account r, double a, String c, LocalDateTime d) {
+        transactionID = 0;
         sender = s;
         receiver = r;
         amount = a;
@@ -20,14 +21,6 @@ public class Transaction {
         date = d;
     }
 
-    public Transaction(int id, Account s, Account r, double a, String c) {
-        transactionID = id;
-        sender = s;
-        receiver = r;
-        amount = a;
-        comment = c;
-        date = LocalDateTime.now();
-    }
 
     public Transaction(int id, Account s, Account r, double a, String c, LocalDateTime d) {
         transactionID = id;

@@ -135,6 +135,8 @@ public class RegistrationWindow extends JFrame {
     public boolean validEmailAddress(String email) {
 
         String[] emailSections = email.split("@");
+        if (emailSections.length != 2)
+            return false;
         String username = emailSections[0];
         String service = emailSections[1].split("\\.")[0];
         String domain = emailSections[1].split("\\.")[1];

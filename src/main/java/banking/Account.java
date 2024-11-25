@@ -54,7 +54,9 @@ public class Account {
         return isFrozen;
     }
 
-    public List<Transaction> getTransactions() { return transactions; }
+    public List<Transaction> getTransactions() {
+        return transactions;
+    }
 
 
     public void freeze() {

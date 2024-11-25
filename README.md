@@ -20,7 +20,7 @@ A Java-based **Bank Management System** designed to manage user accounts, perfor
   - Marks and flags suspicious transactions.
 
 - **File I/O Integration**
-  - JSON/XML support for importing/exporting data.
+  - SQLite support for importing/exporting data.
   - Backup and restore options for account and transaction data.
 
 - **JUnit Testing**

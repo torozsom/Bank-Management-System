@@ -70,7 +70,6 @@ public class TransactionManager {
             statement.setInt(2, a.getAccountNumber());
 
             try (ResultSet resultSet = statement.executeQuery()) {
-
                 while (resultSet.next()) {
                     int transactionID = resultSet.getInt("transaction_id");
                     int senderNumber = resultSet.getInt("sender_account_number");
@@ -82,14 +81,14 @@ public class TransactionManager {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                     LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
 
-                    Account sender = accountManager.loadAccount(senderNumber);
-                    Account receiver = accountManager.loadAccount(receiverNumber);
-
-                    transactions.add(new Transaction(transactionID, sender, receiver, amount, comment, localDateTime));
+                    if (accountManager.accountExists(senderNumber) && accountManager.accountExists(receiverNumber)) {
+                        Account sender = accountManager.loadAccount(senderNumber);
+                        Account receiver = accountManager.loadAccount(receiverNumber);
+                        transactions.add(new Transaction(transactionID, sender, receiver, amount, comment, localDateTime));
+                    }
                 }
             }
         }
-
         return transactions;
     }
 

@@ -2,6 +2,9 @@ package banking;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -14,16 +17,16 @@ public class MainWindow extends JFrame {
     private final JScrollPane scrollPane;
     private final JPanel contentPanel;
     private JComboBox<Integer> accountSelector;
+    private DefaultListModel<String> contactListModel;
+    private JTextField searchField;
 
     private JLabel balanceLabel;
-    private JButton refreshButton;
+
     private JButton depositButton;
     private JButton withdrawButton;
     private JButton transferButton;
     private JButton freezeButton;
     private JButton unfreezeButton;
-    private JButton openButton;
-    private JButton closeButton;
 
     private final UserManager userManager;
     private final AccountManager accountManager;
@@ -31,7 +34,6 @@ public class MainWindow extends JFrame {
 
     private final User currentUser;
     private Account currentAccount;
-    private final Image icon;
 
 
     /// Creates and shows the main window
@@ -52,7 +54,7 @@ public class MainWindow extends JFrame {
         setLocationRelativeTo(null);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
-        icon = Toolkit.getDefaultToolkit().getImage("icon.png");
+        Image icon = Toolkit.getDefaultToolkit().getImage("icon.png");
         setIconImage(icon);
 
         createMenuBar();
@@ -61,6 +63,7 @@ public class MainWindow extends JFrame {
 
         setUpAccountChooser();
         setUpAccountActions();
+        setUpContactManager();
         transactionsTable();
 
         scrollPane = new JScrollPane(contentPanel);
@@ -152,7 +155,7 @@ public class MainWindow extends JFrame {
 
         accountChooserPanel.add(accountSelector);
 
-        refreshButton = new JButton("Refresh");
+        JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(e -> {
             try {
                 currentAccount = accountManager.loadAccount((int) accountSelector.getSelectedItem());
@@ -167,7 +170,7 @@ public class MainWindow extends JFrame {
         contentPanel.add(accountChooserPanel);
 
         JPanel balancePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        balanceLabel = new JLabel("Balance: " + currentAccount.getBalance() + " Ft"); // Placeholder balance
+        balanceLabel = new JLabel("Balance: " + currentAccount.getBalance() + " Ft");
         balanceLabel.setFont(new Font("Times New Roman", Font.BOLD, 20));
         balancePanel.add(balanceLabel);
         balancePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 70, 20));
@@ -178,11 +181,9 @@ public class MainWindow extends JFrame {
 
     ///  real-time update of data on the UI
     private void refreshPage() {
-        // Update balance label
         if (currentAccount != null) {
             balanceLabel.setText("Balance: " + currentAccount.getBalance() + " Ft");
 
-            // Update Freeze/Unfreeze button visibility
             depositButton.setEnabled(!currentAccount.isFrozen());
             withdrawButton.setEnabled(!currentAccount.isFrozen());
             transferButton.setEnabled(!currentAccount.isFrozen());
@@ -191,7 +192,6 @@ public class MainWindow extends JFrame {
         }
 
         updateTransactionTable();
-
         repaint();
         revalidate();
     }
@@ -200,6 +200,7 @@ public class MainWindow extends JFrame {
     /// creates the grid layout and its account action contents
     private void setUpAccountActions() {
         JPanel actionsPanel = new JPanel(new GridBagLayout());
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
@@ -232,7 +233,6 @@ public class MainWindow extends JFrame {
         depositButton = new JButton("Deposit");
         depositButton.setFont(new Font("Times New Roman", Font.BOLD, 14));
         depositButton.setPreferredSize(buttonSize);
-
 
         depositButton.addActionListener(e -> {
             try {
@@ -295,8 +295,8 @@ public class MainWindow extends JFrame {
                     Transaction transaction = new Transaction(currentAccount, currentAccount, amount, "Withdrawal", LocalDateTime.now());
                     transactionManager.saveTransaction(transaction);
                     currentAccount.withdraw(amount);
-                    withdrawField.setText(""); // Clear the field
-                    refreshPage(); // Refresh UI
+                    withdrawField.setText("");
+                    refreshPage();
                 } else {
                     JOptionPane.showMessageDialog(this, "Failed to withdraw money.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -347,7 +347,6 @@ public class MainWindow extends JFrame {
         JTextField transferCommentField = new JTextField();
         transferCommentField.setPreferredSize(textFieldSize);
         actionsPanel.add(transferCommentField, gbc);
-
 
         gbc.gridx = 3;
         transferButton = new JButton("Transfer");
@@ -405,7 +404,7 @@ public class MainWindow extends JFrame {
 
         gbc.gridx = 2;
         gbc.gridwidth = 1;
-        openButton = new JButton("Open");
+        JButton openButton = new JButton("Open");
         openButton.setFont(new Font("Times New Roman", Font.BOLD, 14));
         openButton.setPreferredSize(buttonSize);
 
@@ -424,7 +423,6 @@ public class MainWindow extends JFrame {
                     updateAccountSelector();
                     JOptionPane.showMessageDialog(this, "New account has been opened successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
                 }
-
 
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
@@ -464,7 +462,6 @@ public class MainWindow extends JFrame {
                 JOptionPane.showMessageDialog(this, "Database error while freezing the account.", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
-
 
         actionsPanel.add(freezeButton, gbc);
 
@@ -514,13 +511,12 @@ public class MainWindow extends JFrame {
 
         gbc.gridx = 2;
         gbc.gridwidth = 1;
-        closeButton = new JButton("Close");
+        JButton closeButton = new JButton("Close");
         closeButton.setFont(new Font("Times New Roman", Font.BOLD, 14));
         closeButton.setPreferredSize(buttonSize);
 
         closeButton.addActionListener(e -> {
             try {
-
                 if (currentUser.getAccounts().isEmpty()) {
                     JOptionPane.showMessageDialog(this, "No accounts available to close.", "Error", JOptionPane.ERROR_MESSAGE);
                     return;
@@ -538,7 +534,6 @@ public class MainWindow extends JFrame {
                     if (choice == JOptionPane.NO_OPTION)
                         return;
 
-                    // Delete the account and the user profile
                     accountManager.deleteAccount(currentAccount);
                     userManager.deleteUser(currentUser.getEmail());
 
@@ -546,7 +541,6 @@ public class MainWindow extends JFrame {
                             "The account and user profile have been deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                    // Close the current window and redirect to the login page
                     dispose();
                     new LoginWindow();
 
@@ -559,7 +553,6 @@ public class MainWindow extends JFrame {
                     if (choice == JOptionPane.NO_OPTION)
                         return;
 
-
                     accountManager.deleteAccount(currentAccount);
                     currentUser.getAccounts().remove(currentAccount);
 
@@ -567,7 +560,6 @@ public class MainWindow extends JFrame {
                             "The account has been deleted successfully.",
                             "Success", JOptionPane.INFORMATION_MESSAGE);
 
-                    // Update account selector
                     updateAccountSelector();
                 }
             } catch (SQLException ex) {
@@ -575,11 +567,10 @@ public class MainWindow extends JFrame {
             }
         });
 
-
         actionsPanel.add(closeButton, gbc);
-
         contentPanel.add(actionsPanel);
     }
+
 
     /// Refresh account selector and UI
     public void updateAccountSelector() throws SQLException {
@@ -606,7 +597,6 @@ public class MainWindow extends JFrame {
         contentPanel.add(transactionsPanel);
 
         Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
-
         List<Transaction> transactions = currentAccount.getTransactions();
 
         Object[][] data = new Object[transactions.size()][5];
@@ -617,7 +607,6 @@ public class MainWindow extends JFrame {
             data[i][3] = transactions.get(i).getComment();
             data[i][4] = transactions.get(i).getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
         }
-
 
         JTable recentTransactions = new JTable(data, headers);
         recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
@@ -661,6 +650,154 @@ public class MainWindow extends JFrame {
             JOptionPane.showMessageDialog(this, "Error updating transactions: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
+
+    /// Introduces the contact manager section of the GUI
+    private void setUpContactManager() {
+        JPanel contactTitle = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        JLabel contactManager = new JLabel("Contact Manager");
+        contactManager.setFont(new Font("Times New Roman", Font.BOLD, 20));
+        contactManager.setBorder(BorderFactory.createEmptyBorder(50, 20, 20, 20));
+        contactTitle.add(contactManager);
+        contentPanel.add(contactTitle);
+
+        JPanel inputPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 5, 5, 5);
+        Dimension textFieldSize = new Dimension(300, 25);
+
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 0.3;
+        JLabel nameLabel = new JLabel("Name of company / individual:");
+        nameLabel.setFont(new Font("Times New Roman", Font.BOLD, 17));
+        inputPanel.add(nameLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField nameField = new JTextField();
+        nameField.setPreferredSize(textFieldSize);
+        inputPanel.add(nameField, gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 0.3;
+        JLabel accountLabel = new JLabel("Account number:");
+        accountLabel.setFont(new Font("Times New Roman", Font.BOLD, 17));
+        inputPanel.add(accountLabel, gbc);
+
+        gbc.gridx = 1;
+        gbc.weightx = 0.7;
+        JTextField accountField = new JTextField();
+        accountField.setPreferredSize(textFieldSize);
+        inputPanel.add(accountField, gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.weightx = 0.7;
+        gbc.anchor = GridBagConstraints.EAST;
+        JButton saveButton = new JButton("Save");
+        saveButton.setPreferredSize(new Dimension(100, 25));
+        inputPanel.add(saveButton, gbc);
+        inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        contentPanel.add(inputPanel);
+
+        saveButton.addActionListener(e -> {
+            String name = nameField.getText().trim();
+            String accountNumberText = accountField.getText().trim();
+
+            if (name.isEmpty() || accountNumberText.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            try {
+                int accountNumber = Integer.parseInt(accountNumberText);
+                List<Contact> contacts = ContactManager.loadContacts();
+
+                boolean exists = contacts.stream()
+                        .anyMatch(contact -> contact.getName().equalsIgnoreCase(name) || contact.getAccountNumber() == accountNumber);
+
+                if (exists) {
+                    JOptionPane.showMessageDialog(this, "Contact already exists.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                contacts.add(new Contact(name, accountNumber));
+                ContactManager.saveContacts(contacts);
+
+                JOptionPane.showMessageDialog(this, "Contact saved successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
+
+                nameField.setText("");
+                accountField.setText("");
+                loadContactsToList();
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Account number must be a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Failed to save contact: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+
+        JPanel contactManagerPanel = new JPanel();
+        contactManagerPanel.setLayout(new BoxLayout(contactManagerPanel, BoxLayout.Y_AXIS));
+        contactManagerPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        searchField = new JTextField();
+        searchField.setPreferredSize(textFieldSize);
+        searchField.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        searchField.setText("Search by name or account number");
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                filterContactList(searchField.getText());
+            }
+        });
+        searchPanel.add(searchField);
+        contactManagerPanel.add(searchPanel);
+
+        contactListModel = new DefaultListModel<>();
+        JList<String> contactList = new JList<>(contactListModel);
+        contactList.setFont(new Font("Times New Roman", Font.BOLD, 16));
+        contactList.setFixedCellWidth(300);
+        contactList.setVisibleRowCount(10);
+        JScrollPane scrollPane = new JScrollPane(contactList);
+        contactManagerPanel.add(scrollPane);
+
+        contentPanel.add(contactManagerPanel);
+        loadContactsToList();
+    }
+
+
+    /// Utility function to load the contact list model
+    private void loadContactsToList() {
+        try {
+            List<Contact> contacts = ContactManager.loadContacts();
+            contactListModel.clear();
+            for (Contact contact : contacts)
+                contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Failed to load contacts: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+
+    /// Utility function to filter the contacts based on a query
+    private void filterContactList(String query) {
+        try {
+            List<Contact> contacts = ContactManager.loadContacts();
+            contactListModel.clear();
+
+            for (Contact contact : contacts)
+                if (contact.getName().toLowerCase().contains(query.toLowerCase()) || String.valueOf(contact.getAccountNumber()).contains(query))
+                    contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
+
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Failed to filter contacts: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
 
 
     public static void main(String[] args) throws SQLException {

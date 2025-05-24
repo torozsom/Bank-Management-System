@@ -1,5 +1,12 @@
 package banking;
 
+import banking.controller.AccountManager;
+import banking.controller.TransactionManager;
+import banking.controller.UserManager;
+import banking.model.Account;
+import banking.model.Transaction;
+import banking.model.User;
+import banking.util.DatabaseManager;
 import org.junit.jupiter.api.*;
 
 import java.sql.*;
@@ -7,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TransactionManagerTest {
@@ -19,6 +27,7 @@ class TransactionManagerTest {
     private User testUser2;
     private Account senderAccount;
     private Account receiverAccount;
+
 
     @BeforeAll
     void setupDatabase() throws SQLException {
@@ -44,12 +53,14 @@ class TransactionManagerTest {
         accountManager.saveAccount(receiverAccount);
     }
 
+
     @Test
     void testSaveTransaction() throws SQLException {
         Transaction transaction = new Transaction(senderAccount, receiverAccount, 2000.0, "Test Transfer", LocalDateTime.now());
         boolean success = transactionManager.saveTransaction(transaction);
         assertTrue(success, "Transaction should be saved successfully");
     }
+
 
     @Test
     void testLoadTransactionsForAccount() throws SQLException {
@@ -104,6 +115,8 @@ class TransactionManagerTest {
             statement.executeUpdate("DELETE FROM Accounts");
             statement.executeUpdate("DELETE FROM Users");
         }
-        connection.close();
+
+        DatabaseManager.getInstance().closeConnection();
     }
+
 }

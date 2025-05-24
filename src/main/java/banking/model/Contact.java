@@ -1,4 +1,4 @@
-package banking;
+package banking.model;
 
 public class Contact {
 

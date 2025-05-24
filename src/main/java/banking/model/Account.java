@@ -1,4 +1,4 @@
-package banking;
+package banking.model;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,9 +55,8 @@ public class Account {
     }
 
     public List<Transaction> getTransactions() {
-        return transactions;
+        return new ArrayList<>(transactions);
     }
-
 
     public void freeze() {
         isFrozen = true;
@@ -67,14 +66,43 @@ public class Account {
         isFrozen = false;
     }
 
+
+    /**
+     * Deposits the specified amount into this account.
+     *
+     * @param amount the amount to deposit
+     * @throws IllegalArgumentException if the amount is not positive
+     */
     public void deposit(double amount) {
+        if (amount <= 0)
+            throw new IllegalArgumentException("Deposit amount must be positive");
+
         balance += amount;
     }
 
+
+    /**
+     * Withdraws the specified amount from this account.
+     *
+     * @param amount the amount to withdraw
+     * @throws IllegalArgumentException if the amount is not positive or exceeds the balance
+     */
     public void withdraw(double amount) {
+        if (amount <= 0)
+            throw new IllegalArgumentException("Withdrawal amount must be positive");
+
+        if (amount > balance)
+            throw new IllegalArgumentException("Insufficient funds");
+
         balance -= amount;
     }
 
+
+    /**
+     * Sets the transactions for this account.
+     *
+     * @param t the list of transactions to set
+     */
     public void setTransactions(List<Transaction> t) {
         transactions = t;
     }

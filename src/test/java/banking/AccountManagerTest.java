@@ -1,5 +1,10 @@
 package banking;
 
+import banking.controller.AccountManager;
+import banking.controller.UserManager;
+import banking.model.Account;
+import banking.model.User;
+import banking.util.DatabaseManager;
 import org.junit.jupiter.api.*;
 
 import java.sql.SQLException;
@@ -7,12 +12,14 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AccountManagerTest {
 
     private AccountManager accountManager;
     private UserManager userManager;
     private User testUser;
+
 
     @BeforeAll
     void setUp() throws SQLException {
@@ -22,6 +29,7 @@ class AccountManagerTest {
         testUser = userManager.loadUser("testuser@gmail.com");
     }
 
+
     @AfterAll
     void tearDown() throws SQLException {
         List<Account> accounts = accountManager.loadAccounts(testUser.getUserID());
@@ -29,7 +37,9 @@ class AccountManagerTest {
             accountManager.deleteAccount(account);
 
         userManager.deleteUser(testUser.getEmail());
+        DatabaseManager.getInstance().closeConnection();
     }
+
 
     @Test
     void testSaveAccount() throws SQLException {
@@ -43,6 +53,7 @@ class AccountManagerTest {
         assertFalse(loadedAccount.isFrozen());
     }
 
+
     @Test
     void testAccountExists() throws SQLException {
         Account account = new Account(testUser.getUserID(), 87654321, 500.0, false);
@@ -51,6 +62,7 @@ class AccountManagerTest {
         assertTrue(accountManager.accountExists(87654321));
         assertFalse(accountManager.accountExists(99999999));
     }
+
 
     @Test
     void testLoadAccount() throws SQLException {
@@ -63,6 +75,7 @@ class AccountManagerTest {
         assertTrue(loadedAccount.isFrozen());
     }
 
+
     @Test
     void testLoadAccounts() throws SQLException {
         Account account1 = new Account(testUser.getUserID(), 11112222, 2000.0, false);
@@ -73,6 +86,7 @@ class AccountManagerTest {
         assertEquals(3, accounts.size());
     }
 
+
     @Test
     void testDeleteAccount() throws SQLException {
         Account account = new Account(testUser.getUserID(), 55556666, 4000.0, false);
@@ -81,5 +95,5 @@ class AccountManagerTest {
         accountManager.deleteAccount(account);
         assertFalse(accountManager.accountExists(55556666));
     }
-}
 
+}

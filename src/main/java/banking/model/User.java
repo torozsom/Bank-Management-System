@@ -1,4 +1,4 @@
-package banking;
+package banking.model;
 
 
 import java.time.LocalDateTime;
@@ -48,7 +48,7 @@ public class User {
     }
 
     public List<Account> getAccounts() {
-        return accounts;
+        return new ArrayList<>(accounts);
     }
 
     public void addAccount(Account a) {

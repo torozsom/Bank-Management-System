@@ -1,5 +1,8 @@
 package banking;
 
+import banking.controller.UserManager;
+import banking.model.User;
+import banking.util.DatabaseManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,20 +12,31 @@ import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+
 class UserManagerTest {
 
     private UserManager userManager;
+
 
     @BeforeEach
     void setUp() throws SQLException {
         userManager = new UserManager();
     }
 
+
     @AfterEach
     void tearDown() throws SQLException {
         userManager.deleteUser("testuser@example.com");
         userManager.deleteUser("anotheruser@example.com");
     }
+
+
+    @org.junit.jupiter.api.AfterAll
+    static void tearDownAll() throws SQLException {
+        // Close the database connection
+        DatabaseManager.getInstance().closeConnection();
+    }
+
 
     @Test
     void testSaveUser() throws SQLException {
@@ -35,6 +49,7 @@ class UserManagerTest {
         assertTrue(userId > 0, "User ID should be greater than 0 for a saved user");
         assertTrue(userManager.userExists(email), "Saved user should exist in the database");
     }
+
 
     @Test
     void testUserExists() throws SQLException {
@@ -49,6 +64,7 @@ class UserManagerTest {
         assertFalse(userManager.userExists("nonexistent@example.com"), "userExists should return false for a non-existing user");
     }
 
+
     @Test
     void testAuthenticateUser() throws SQLException {
         String email = "testuser@example.com";
@@ -62,6 +78,7 @@ class UserManagerTest {
         assertFalse(userManager.authenticateUser(email, "wrongpassword"), "Authentication should fail with incorrect password");
         assertFalse(userManager.authenticateUser("nonexistent@example.com", password), "Authentication should fail for non-existent email");
     }
+
 
     @Test
     void testLoadUser() throws SQLException {
@@ -95,4 +112,5 @@ class UserManagerTest {
         assertTrue(userManager.deleteUser(email), "deleteUser should return true after successful deletion");
         assertFalse(userManager.userExists(email), "User should not exist after deletion");
     }
+
 }

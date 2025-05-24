@@ -1,4 +1,9 @@
-package banking;
+package banking.view;
+
+import banking.controller.AccountManager;
+import banking.controller.UserManager;
+import banking.model.Account;
+import banking.model.User;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,4 +1,8 @@
-package banking;
+package banking.controller;
+
+import banking.util.DatabaseManager;
+import banking.model.Account;
+import banking.model.Transaction;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -9,22 +13,13 @@ import java.util.List;
 
 public class TransactionManager {
 
-    private final String dataBaseURL;
     private final Connection connection;
     private final AccountManager accountManager;
 
 
     public TransactionManager() throws SQLException {
-        dataBaseURL = "jdbc:sqlite:Banking.db";
-        connection = DriverManager.getConnection(dataBaseURL);
+        connection = DatabaseManager.getInstance().getConnection();
         accountManager = new AccountManager();
-    }
-
-
-    /// Safely closes the connection to the database
-    private void close() throws SQLException {
-        if (connection != null && !connection.isClosed())
-            connection.close();
     }
 
 

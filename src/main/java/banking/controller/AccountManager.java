@@ -1,4 +1,7 @@
-package banking;
+package banking.controller;
+
+import banking.util.DatabaseManager;
+import banking.model.Account;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -7,21 +10,13 @@ import java.util.List;
 
 public class AccountManager {
 
-    private final String dataBaseURL;
     private final Connection connection;
 
 
     public AccountManager() throws SQLException {
-        dataBaseURL = "jdbc:sqlite:Banking.db";
-        connection = DriverManager.getConnection(dataBaseURL);
+        connection = DatabaseManager.getInstance().getConnection();
     }
 
-
-    /// Safely closes the connection to the database
-    void close() throws SQLException {
-        if (connection != null && !connection.isClosed())
-            connection.close();
-    }
 
     /**
      * Saves an account with its data in the database.
@@ -129,11 +124,15 @@ public class AccountManager {
      * @param acc    the account to deposit to
      * @param amount the amount to deposit
      * @return true if the deposit was successful, false otherwise
-     * @throws SQLException when a database error occurs
+     * @throws SQLException             when a database error occurs
+     * @throws IllegalArgumentException if the amount is not positive or the account is frozen
      */
     public boolean depositMoney(Account acc, double amount) throws SQLException {
         if (amount <= 0)
-            return false;
+            throw new IllegalArgumentException("Deposit amount must be positive");
+
+        if (acc.isFrozen())
+            throw new IllegalArgumentException("Cannot deposit to a frozen account");
 
         String query = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ?";
 
@@ -141,7 +140,13 @@ public class AccountManager {
             statement.setDouble(1, amount);
             statement.setInt(2, acc.getAccountNumber());
             int rowsAffected = statement.executeUpdate();
-            return rowsAffected > 0;
+
+            if (rowsAffected > 0) {
+                // Update the account object to reflect the new balance
+                acc.deposit(amount);
+                return true;
+            }
+            return false;
         }
     }
 
@@ -152,16 +157,20 @@ public class AccountManager {
      * @param acc    the account to withdraw from
      * @param amount the amount to withdraw
      * @return true if the withdrawal was successful, false otherwise
-     * @throws SQLException when a database error occurs
+     * @throws SQLException             when a database error occurs
+     * @throws IllegalArgumentException if the amount is not positive, exceeds the balance, or the account is frozen
      */
     public boolean withdrawMoney(Account acc, double amount) throws SQLException {
         if (amount <= 0)
-            throw new IllegalArgumentException("Withdrawal amount must be positive.");
+            throw new IllegalArgumentException("Withdrawal amount must be positive");
+
+        if (acc.isFrozen())
+            throw new IllegalArgumentException("Cannot withdraw from a frozen account");
 
         // Check for sufficient funds
         Account account = loadAccount(acc.getAccountNumber());
         if (account.getBalance() < amount)
-            return false;
+            throw new IllegalArgumentException("Insufficient funds");
 
         String query = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ?";
 
@@ -169,7 +178,13 @@ public class AccountManager {
             statement.setDouble(1, amount);
             statement.setInt(2, acc.getAccountNumber());
             int rowsAffected = statement.executeUpdate();
-            return rowsAffected > 0;
+
+            if (rowsAffected > 0) {
+                // Update the account object to reflect the new balance
+                acc.withdraw(amount);
+                return true;
+            }
+            return false;
         }
     }
 
@@ -181,18 +196,33 @@ public class AccountManager {
      * @param destinationAccount the destination account number
      * @param amount             the amount to transfer
      * @return true if the transfer was successful, false otherwise
-     * @throws SQLException when a database error occurs
+     * @throws SQLException             when a database error occurs
+     * @throws IllegalArgumentException if the amount is not positive, exceeds the source balance,
+     *                                  the destination account doesn't exist, or either account is frozen
      */
     public boolean transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {
         if (amount <= 0)
-            throw new IllegalArgumentException("Withdrawal amount must be positive.");
+            throw new IllegalArgumentException("Transfer amount must be positive");
+
+        if (sourceAccount == destinationAccount)
+            throw new IllegalArgumentException("Source and destination accounts cannot be the same");
 
         Account source = loadAccount(sourceAccount);
-        if (source.getBalance() < amount)
-            return false;
+        if (source == null)
+            throw new IllegalArgumentException("Source account does not exist");
 
-        if (!accountExists(destinationAccount))
-            throw new IllegalArgumentException("Destination account does not exist.");
+        if (source.isFrozen())
+            throw new IllegalArgumentException("Cannot transfer from a frozen account");
+
+        if (source.getBalance() < amount)
+            throw new IllegalArgumentException("Insufficient funds in source account");
+
+        Account destination = loadAccount(destinationAccount);
+        if (destination == null)
+            throw new IllegalArgumentException("Destination account does not exist");
+
+        if (destination.isFrozen())
+            throw new IllegalArgumentException("Cannot transfer to a frozen account");
 
         String deductQuery = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ?";
         String addQuery = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ?";
@@ -212,6 +242,9 @@ public class AccountManager {
             addStatement.executeUpdate();
 
             connection.commit();
+            // Update the account objects to reflect the new balances
+            source.withdraw(amount);
+            destination.deposit(amount);
             return true;
         } catch (SQLException ex) {
             connection.rollback();

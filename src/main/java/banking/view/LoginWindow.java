@@ -1,4 +1,6 @@
-package banking;
+package banking.view;
+
+import banking.controller.UserManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -93,7 +95,7 @@ public class LoginWindow extends JFrame {
         //When the login button is clicked, the data entered will be authenticated
         //Proceed to the main window when everything is validated
         //Otherwise show warning message
-        loginButton.addActionListener(e -> {
+        loginButton.addActionListener(_ -> {
             String email = emailField.getText();
             String password = new String(passwordField.getPassword());
             try {
@@ -110,7 +112,7 @@ public class LoginWindow extends JFrame {
 
 
         //Proceed to the registation window when clicking the registry button
-        registerButton.addActionListener(e -> {
+        registerButton.addActionListener(_ -> {
             try {
                 new RegistrationWindow();
             } catch (SQLException ex) {
@@ -121,4 +123,5 @@ public class LoginWindow extends JFrame {
 
         setVisible(true);
     }
+
 }

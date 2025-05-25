@@ -10,7 +10,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+
+/**
+ * ContactManager is responsible for managing contacts by saving and loading them
+ * to and from a JSON file. It provides methods to save a list of contacts and
+ * load them back, handling any I/O exceptions that may occur.
+ */
 public class ContactManager {
+
     private static final String FILE_NAME = "contacts.json";
 
 

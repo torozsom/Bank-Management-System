@@ -1,8 +1,9 @@
-package banking.util;
+package banking.controller;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 
 /**
  * Centralized database connection manager for the banking application.
@@ -10,6 +11,7 @@ import java.sql.SQLException;
  * eliminating duplicate connection code across manager classes.
  */
 public class DatabaseManager {
+
     private static final String DATABASE_URL = "jdbc:sqlite:config/Banking.db";
     private static DatabaseManager instance;
     private Connection connection;

@@ -1,28 +1,48 @@
 package banking.controller;
 
-import banking.util.DatabaseManager;
 import banking.model.Account;
 import banking.model.Transaction;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * TransactionManager is responsible for managing transactions in the banking application.
+ * It provides methods to save, load, and delete transactions from the database.
+ */
 public class TransactionManager {
 
     private final Connection connection;
     private final AccountManager accountManager;
 
 
+    /**
+     * Constructor for TransactionManager.
+     * Initializes the connection to the database and the AccountManager.
+     *
+     * @throws SQLException if a database access error occurs
+     */
     public TransactionManager() throws SQLException {
         connection = DatabaseManager.getInstance().getConnection();
         accountManager = new AccountManager();
     }
 
 
+    /**
+     * Saves a transaction to the database.
+     * Checks if both sender and receiver accounts exist before saving.
+     *
+     * @param transaction the transaction to be saved
+     * @return true if the transaction was saved successfully, false otherwise
+     * @throws SQLException if a database access error occurs
+     */
     public boolean saveTransaction(Transaction transaction) throws SQLException {
         if (!accountManager.accountExists(transaction.getSender().getAccountNumber())
                 || !accountManager.accountExists(transaction.getReceiver().getAccountNumber()))

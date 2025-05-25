@@ -1,8 +1,8 @@
 package banking;
 
+import banking.controller.DatabaseManager;
 import banking.controller.UserManager;
 import banking.model.User;
-import banking.util.DatabaseManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

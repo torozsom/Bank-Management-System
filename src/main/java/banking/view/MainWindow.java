@@ -255,7 +255,6 @@ public class MainWindow extends JFrame {
                     JOptionPane.showMessageDialog(this, "Deposit successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     Transaction transaction = new Transaction(currentAccount, currentAccount, amount, "Deposit", LocalDateTime.now());
                     transactionManager.saveTransaction(transaction);
-                    currentAccount.deposit(amount);
                     depositField.setText("");
                     refreshPage();
                 } else {
@@ -303,7 +302,6 @@ public class MainWindow extends JFrame {
                     JOptionPane.showMessageDialog(this, "Withdrawal successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
                     Transaction transaction = new Transaction(currentAccount, currentAccount, amount, "Withdrawal", LocalDateTime.now());
                     transactionManager.saveTransaction(transaction);
-                    currentAccount.withdraw(amount);
                     withdrawField.setText("");
                     refreshPage();
                 } else {
@@ -315,7 +313,6 @@ public class MainWindow extends JFrame {
         });
 
         actionsPanel.add(withdrawButton, gbc);
-
 
         // Transfer contents
         gbc.gridx = 0;
@@ -387,7 +384,6 @@ public class MainWindow extends JFrame {
 
                 Transaction transaction = new Transaction(currentAccount, destinationAccount, amount, comment, LocalDateTime.now());
                 transactionManager.saveTransaction(transaction);
-                currentAccount.withdraw(amount);
                 JOptionPane.showMessageDialog(this, "Transfer successful.", "Success", JOptionPane.INFORMATION_MESSAGE);
 
                 refreshPage();
@@ -805,11 +801,6 @@ public class MainWindow extends JFrame {
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Failed to filter contacts: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-
-    public static void main(String[] args) throws SQLException {
-        new LoginWindow();
     }
 
 }

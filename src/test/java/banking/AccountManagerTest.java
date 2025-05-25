@@ -1,11 +1,14 @@
 package banking;
 
 import banking.controller.AccountManager;
+import banking.controller.DatabaseManager;
 import banking.controller.UserManager;
 import banking.model.Account;
 import banking.model.User;
-import banking.util.DatabaseManager;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
 import java.sql.SQLException;
 import java.util.List;

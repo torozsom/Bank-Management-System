@@ -1,13 +1,20 @@
 package banking.controller;
 
-import banking.util.DatabaseManager;
 import banking.model.User;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 
+/**
+ * UserManager is responsible for managing user-related operations
+ * such as saving, loading, authenticating, and deleting users in the database.
+ * It also provides validation for usernames, services, and domains.
+ */
 public class UserManager {
 
     public static final String USERNAME_REGEX = "^[a-zA-Z0-9._]+$";

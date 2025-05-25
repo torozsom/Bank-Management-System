@@ -66,6 +66,10 @@ public class Account {
         isFrozen = false;
     }
 
+    public void setTransactions(List<Transaction> t) {
+        transactions = t;
+    }
+
 
     /**
      * Deposits the specified amount into this account.
@@ -95,16 +99,6 @@ public class Account {
             throw new IllegalArgumentException("Insufficient funds");
 
         balance -= amount;
-    }
-
-
-    /**
-     * Sets the transactions for this account.
-     *
-     * @param t the list of transactions to set
-     */
-    public void setTransactions(List<Transaction> t) {
-        transactions = t;
     }
 
 }

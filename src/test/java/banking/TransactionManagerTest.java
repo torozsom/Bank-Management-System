@@ -1,15 +1,21 @@
 package banking;
 
 import banking.controller.AccountManager;
+import banking.controller.DatabaseManager;
 import banking.controller.TransactionManager;
 import banking.controller.UserManager;
 import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;
-import banking.util.DatabaseManager;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -31,7 +37,7 @@ class TransactionManagerTest {
 
     @BeforeAll
     void setupDatabase() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite:Banking.db");
+        connection = DriverManager.getConnection("jdbc:sqlite:config/Banking.db");
         userManager = new UserManager();
         accountManager = new AccountManager();
         transactionManager = new TransactionManager();

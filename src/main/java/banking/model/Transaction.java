@@ -12,6 +12,7 @@ public class Transaction {
     private final String comment;
     private final LocalDateTime date;
 
+
     public Transaction(Account s, Account r, double a, String c, LocalDateTime d) {
         transactionID = 0;
         sender = s;

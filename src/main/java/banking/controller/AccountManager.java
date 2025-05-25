@@ -1,18 +1,29 @@
 package banking.controller;
 
-import banking.util.DatabaseManager;
 import banking.model.Account;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 
+/**
+ * AccountManager is responsible for managing accounts in the banking application.
+ * It provides methods to save, load, deposit, withdraw, transfer, freeze, unfreeze,
+ * and delete accounts in the database.
+ */
 public class AccountManager {
 
     private final Connection connection;
 
-
+    /**
+     * Constructor for AccountManager that initializes the database connection.
+     *
+     * @throws SQLException when connection is unsuccessful
+     */
     public AccountManager() throws SQLException {
         connection = DatabaseManager.getInstance().getConnection();
     }
@@ -142,7 +153,6 @@ public class AccountManager {
             int rowsAffected = statement.executeUpdate();
 
             if (rowsAffected > 0) {
-                // Update the account object to reflect the new balance
                 acc.deposit(amount);
                 return true;
             }
@@ -180,7 +190,6 @@ public class AccountManager {
             int rowsAffected = statement.executeUpdate();
 
             if (rowsAffected > 0) {
-                // Update the account object to reflect the new balance
                 acc.withdraw(amount);
                 return true;
             }
@@ -242,7 +251,6 @@ public class AccountManager {
             addStatement.executeUpdate();
 
             connection.commit();
-            // Update the account objects to reflect the new balances
             source.withdraw(amount);
             destination.deposit(amount);
             return true;
@@ -291,16 +299,14 @@ public class AccountManager {
      * Deletes the given account from the database
      *
      * @param acc the account to be deleted
-     * @return True when deletion is successful, false otherwise.
      * @throws SQLException when connection is unsuccessful
      */
-    public boolean deleteAccount(Account acc) throws SQLException {
+    public void deleteAccount(Account acc) throws SQLException {
         String query = "DELETE FROM Accounts WHERE account_number = ?";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, acc.getAccountNumber());
             statement.executeUpdate();
-            return true;
         }
     }
 

@@ -1,4 +1,4 @@
-package banking.controller;
+package banking.data;
 
 import banking.model.Account;
 
@@ -53,7 +53,7 @@ public class AccountManager {
 
 
     /**
-     * Checks if an account with the given number exists already in the DB.
+     * Checks if an account with the given number exists already in the database.
      *
      * @param accountNumber the account number that is being searched for
      * @return True if the account number is found in the table
@@ -100,11 +100,11 @@ public class AccountManager {
 
 
     /**
-     * Searches for accounts based on the given user id in the
-     * database and returns it with all its data as an object.
+     * Searches for accounts based on the given user ID in the
+     * database and returns them with all their data as objects.
      *
-     * @param user_id the id number that is searched for
-     * @return a List of Accounts that belong to the user with the given id
+     * @param user_id the user ID number that is searched for
+     * @return a List of Accounts that belong to the user with the given ID
      * @throws SQLException when connection is unsuccessful
      */
     public List<Account> loadAccounts(int user_id) throws SQLException {
@@ -282,7 +282,7 @@ public class AccountManager {
     /**
      * Unfreezes the given account.
      *
-     * @param acc the account to freeze
+     * @param acc the account to unfreeze
      * @throws SQLException when a database error occurs
      */
     public void unfreezeAccount(Account acc) throws SQLException {
@@ -296,7 +296,7 @@ public class AccountManager {
 
 
     /**
-     * Deletes the given account from the database
+     * Deletes the given account from the database.
      *
      * @param acc the account to be deleted
      * @throws SQLException when connection is unsuccessful

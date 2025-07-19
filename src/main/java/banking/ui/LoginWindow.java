@@ -1,6 +1,6 @@
-package banking.view;
+package banking.ui;
 
-import banking.controller.UserManager;
+import banking.service.LoginService;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 public class LoginWindow extends JFrame {
 
-    private final UserManager userManager;
+    private final LoginService loginService;
     private final Image icon;
 
     private final JTextField emailField;
@@ -23,7 +23,7 @@ public class LoginWindow extends JFrame {
     /// Creates and shows the login window of the app.
     public LoginWindow() throws SQLException {
 
-        userManager = new UserManager();
+        loginService = new LoginService();
 
         setTitle("Bank Account - Login");
         setSize(800, 500);
@@ -88,9 +88,7 @@ public class LoginWindow extends JFrame {
         gbc.gridy = 2;
         contentPanel.add(registerButton, gbc);
 
-
         add(contentPanel);
-
 
         //When the login button is clicked, the data entered will be authenticated
         //Proceed to the main window when everything is validated
@@ -98,27 +96,29 @@ public class LoginWindow extends JFrame {
         loginButton.addActionListener(_ -> {
             String email = emailField.getText();
             String password = new String(passwordField.getPassword());
-            try {
-                if (userManager.authenticateUser(email, password)) {
+
+            LoginService.AuthenticationResult authResult = loginService.authenticateUser(email, password);
+
+            if (authResult.success()) {
+                LoginService.NavigationResult navResult = loginService.navigateToMainWindow(email);
+                if (navResult.success()) {
                     dispose();
-                    new MainWindow(email);
                 } else {
-                    JOptionPane.showMessageDialog(null, "Invalid email or password.", "WARNING", JOptionPane.WARNING_MESSAGE);
+                    JOptionPane.showMessageDialog(null, navResult.errorMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
                 }
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+            } else {
+                JOptionPane.showMessageDialog(null, authResult.message(), "WARNING", JOptionPane.WARNING_MESSAGE);
             }
         });
 
-
         //Proceed to the registation window when clicking the registry button
         registerButton.addActionListener(_ -> {
-            try {
-                new RegistrationWindow();
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
+            LoginService.NavigationResult navResult = loginService.navigateToRegistrationWindow();
+            if (navResult.success()) {
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(null, navResult.errorMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
             }
-            dispose();
         });
 
         setVisible(true);

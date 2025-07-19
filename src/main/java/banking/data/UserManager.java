@@ -1,4 +1,4 @@
-package banking.controller;
+package banking.data;
 
 import banking.model.User;
 
@@ -25,7 +25,7 @@ public class UserManager {
 
 
     /**
-     * Ctor that initializes the connection to the database.
+     * Constructor that initializes the connection to the database.
      *
      * @throws SQLException when connection is unsuccessful
      */
@@ -35,11 +35,11 @@ public class UserManager {
 
 
     /**
-     * Registers a user and saves its email, password and date
+     * Registers a user and saves their email, password and date
      * of registry in the database.
      *
      * @param user the user to be registered
-     * @return The user id that is associated with the saved user in the db
+     * @return The user ID that is associated with the saved user in the database
      * @throws SQLException when connection is unsuccessful
      */
     public int saveUser(User user) throws SQLException {

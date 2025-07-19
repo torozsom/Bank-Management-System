@@ -1,4 +1,4 @@
-package banking.controller;
+package banking.data;
 
 import banking.model.Contact;
 import com.google.gson.Gson;

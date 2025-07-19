@@ -1,9 +1,9 @@
 package banking;
 
-import banking.controller.AccountManager;
-import banking.controller.DatabaseManager;
-import banking.controller.TransactionManager;
-import banking.controller.UserManager;
+import banking.data.AccountManager;
+import banking.data.DatabaseManager;
+import banking.data.TransactionManager;
+import banking.data.UserManager;
 import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;

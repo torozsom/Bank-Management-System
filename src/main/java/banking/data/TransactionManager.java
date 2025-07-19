@@ -1,4 +1,4 @@
-package banking.controller;
+package banking.data;
 
 import banking.model.Account;
 import banking.model.Transaction;
@@ -69,11 +69,11 @@ public class TransactionManager {
 
 
     /**
-     * Searches for transactions based on the given user id in the
-     * database and returns it with all its data as an object.
+     * Searches for transactions based on the given account in the
+     * database and returns them as a list of Transaction objects.
      *
-     * @param a the id number that is searched for
-     * @return a List of Accounts that belong to the user with the given id
+     * @param a the account to search transactions for
+     * @return a List of Transactions that involve the given account (as sender or receiver)
      * @throws SQLException when connection is unsuccessful
      */
     public List<Transaction> loadTransactions(Account a) throws SQLException {

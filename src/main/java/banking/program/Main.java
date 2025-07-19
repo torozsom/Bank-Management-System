@@ -1,6 +1,6 @@
 package banking.program;
 
-import banking.view.LoginWindow;
+import banking.ui.LoginWindow;
 
 import javax.swing.*;
 import java.sql.SQLException;

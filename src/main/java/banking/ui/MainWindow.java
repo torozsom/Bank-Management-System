@@ -12,6 +12,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 
+/**
+ * MainWindow class represents the main user interface of the banking application.
+ * It allows users to manage their accounts, perform transactions,
+ * and view their transaction history.
+ */
 public class MainWindow extends JFrame {
 
     // UI Constants

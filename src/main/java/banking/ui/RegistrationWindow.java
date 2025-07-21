@@ -7,6 +7,12 @@ import java.awt.*;
 import java.sql.SQLException;
 
 
+/**
+ * The RegistrationWindow class provides a GUI for users to register
+ * a new account in the banking application. It allows users to enter
+ * their email, password, and confirm their password.
+ * Upon successful registration, it navigates to the login window.
+ */
 public class RegistrationWindow extends JFrame {
 
     private final RegistrationService registrationService;

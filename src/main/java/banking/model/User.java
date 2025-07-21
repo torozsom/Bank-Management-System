@@ -1,9 +1,9 @@
 package banking.model;
 
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 
 /**
  * Represents a user in the banking system.
@@ -46,81 +46,52 @@ public class User {
         accounts = new ArrayList<>();
     }
 
-    /**
-     * Gets the user ID.
-     * @return the user ID
-     */
+    /// Gets the user ID.
     public int getUserID() {
         return userID;
     }
 
-    /**
-     * Sets the user ID.
-     * @param id the user ID to set
-     */
+    /// Sets the user ID.
     public void setUserID(int id) {
         userID = id;
     }
 
-    /**
-     * Gets the user's email address.
-     * @return the email address
-     */
+    /// Gets the user's email address.
     public String getEmail() {
         return email;
     }
 
-    /**
-     * Gets the user's password.
-     * @return the password
-     */
+    /// Gets the user's password.
     public String getPassword() {
         return password;
     }
 
-    /**
-     * Gets the user's registration date.
-     * @return the registration date
-     */
+    /// Gets the user's registration date.
     public LocalDateTime getDateOfRegistry() {
         return dateOfRegistry;
     }
 
-    /**
-     * Gets a copy of the user's accounts list.
-     * @return a new list containing all user accounts
-     */
+    /// Gets a copy of the user's accounts list.
     public List<Account> getAccounts() {
         return new ArrayList<>(accounts);
     }
 
-    /**
-     * Adds an account to the user's account list.
-     * @param a the account to add
-     */
+    /// Adds an account to the user's account list.
     public void addAccount(Account a) {
         accounts.add(a);
     }
 
-    /**
-     * Adds all accounts from the provided list to the user's account list.
-     * @param a the list of accounts to add
-     */
+    /// Adds all accounts from the provided list to the user's account list.
     public void addAllAccounts(List<Account> a) {
         accounts.addAll(a);
     }
 
-    /**
-     * Removes an account from the user's account list.
-     * @param a the account to remove
-     */
+    /// Removes an account from the user's account list.
     public void removeAccount(Account a) {
         accounts.remove(a);
     }
 
-    /**
-     * Clears all accounts from the user's account list.
-     */
+    /// Clears all accounts from the user's account list.
     public void clearAccounts() {
         accounts.clear();
     }

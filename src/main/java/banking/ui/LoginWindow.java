@@ -7,6 +7,10 @@ import java.awt.*;
 import java.sql.SQLException;
 
 
+/**
+ * LoginWindow class represents the login window of the banking application.
+ * It allows users to enter their email and password to log in or navigate to the registration window.
+ */
 public class LoginWindow extends JFrame {
 
     private final LoginService loginService;

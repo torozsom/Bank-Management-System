@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Random;
 
+
 /**
  * RegistrationViewModel handles the business logic for user registration and account creation.
  * This class separates the functional operations from the RegistrationWindow View.
@@ -19,10 +20,13 @@ public class RegistrationService {
     private final UserManager userManager;
     private final AccountManager accountManager;
 
+
+    /// Constructor initializes the UserManager and AccountManager.
     public RegistrationService() throws SQLException {
         this.userManager = new UserManager();
         this.accountManager = new AccountManager();
     }
+
 
     /**
      * Validates an email address format using regex patterns.
@@ -56,6 +60,7 @@ public class RegistrationService {
         return validUsername && validService && validDomain;
     }
 
+
     /**
      * Validates password requirements.
      *
@@ -74,6 +79,7 @@ public class RegistrationService {
         return new ValidationResult(true, "Password is valid.");
     }
 
+
     /**
      * Validates that passwords match.
      *
@@ -88,6 +94,7 @@ public class RegistrationService {
 
         return new ValidationResult(true, "Passwords match.");
     }
+
 
     /**
      * Registers a new user with the provided information.
@@ -109,14 +116,14 @@ public class RegistrationService {
 
             // Validate password
             ValidationResult passwordValidation = validatePassword(password);
-            if (!passwordValidation.isSuccess()) {
-                return new RegistrationResult(false, passwordValidation.getMessage());
+            if (!passwordValidation.success()) {
+                return new RegistrationResult(false, passwordValidation.message());
             }
 
             // Validate password match
             ValidationResult passwordMatchValidation = validatePasswordMatch(password, confirmPassword);
-            if (!passwordMatchValidation.isSuccess()) {
-                return new RegistrationResult(false, passwordMatchValidation.getMessage());
+            if (!passwordMatchValidation.success()) {
+                return new RegistrationResult(false, passwordMatchValidation.message());
             }
 
             // Check if user already exists
@@ -153,6 +160,7 @@ public class RegistrationService {
         }
     }
 
+
     /**
      * Handles navigation back to the login window.
      *
@@ -167,37 +175,16 @@ public class RegistrationService {
         }
     }
 
-    /**
-     * Result class for validation operations.
-     */
-    public static class ValidationResult {
-        private final boolean success;
-        private final String message;
 
-        public ValidationResult(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
+    /// Result class for validation operations.
+    public record ValidationResult(boolean success, String message) { }
 
-        public boolean isSuccess() {
-            return success;
-        }
 
-        public String getMessage() {
-            return message;
-        }
-    }
+    /// Result class for registration operations.
+    public record RegistrationResult(boolean success, String message) { }
 
-    /**
-     * Result class for registration operations.
-     */
-    public record RegistrationResult(boolean success, String message) {
-    }
 
-    /**
-     * Result class for navigation operations.
-     */
-    public record NavigationResult(boolean success, String errorMessage) {
-    }
+    /// Result class for navigation operations.
+    public record NavigationResult(boolean success, String errorMessage) { }
 
 }

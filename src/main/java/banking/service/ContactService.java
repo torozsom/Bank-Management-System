@@ -109,16 +109,11 @@ public class ContactService {
     }
 
 
-    /**
-     * Result class for contact operations.
-     */
-    public record ContactResult(boolean success, String message) {
-    }
+    /// Result class for contact operations.
+    public record ContactResult(boolean success, String message) { }
 
 
-    /**
-     * Result class for contact list operations.
-     */
-    public record ContactListResult(boolean success, String errorMessage, List<Contact> contacts) {
-    }
+    /// Result class for contact list operations.
+    public record ContactListResult(boolean success, String errorMessage, List<Contact> contacts) { }
+
 }

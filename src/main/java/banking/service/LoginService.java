@@ -83,17 +83,11 @@ public class LoginService {
     }
 
 
-    /**
-     * Result class for authentication operations.
-     */
-    public record AuthenticationResult(boolean success, String message) {
-    }
+    /// Result class for authentication operations.
+    public record AuthenticationResult(boolean success, String message) { }
 
 
-    /**
-     * Result class for navigation operations.
-     */
-    public record NavigationResult(boolean success, String errorMessage) {
-    }
+    /// Result class for navigation operations.
+    public record NavigationResult(boolean success, String errorMessage) { }
 
 }

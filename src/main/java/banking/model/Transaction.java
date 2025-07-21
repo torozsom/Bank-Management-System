@@ -2,6 +2,7 @@ package banking.model;
 
 import java.time.LocalDateTime;
 
+
 /**
  * Represents a financial transaction between two accounts.
  * Each transaction has a sender, receiver, amount, comment, and timestamp.
@@ -50,50 +51,32 @@ public class Transaction {
         date = d;
     }
 
-    /**
-     * Gets the transaction ID.
-     * @return the transaction ID
-     */
+    /// Gets the transaction ID.
     public int getTransactionID() {
         return transactionID;
     }
 
-    /**
-     * Gets the sender account.
-     * @return the sender account
-     */
+    /// Gets the sender account.
     public Account getSender() {
         return sender;
     }
 
-    /**
-     * Gets the receiver account.
-     * @return the receiver account
-     */
+    /// Gets the receiver account.
     public Account getReceiver() {
         return receiver;
     }
 
-    /**
-     * Gets the transaction amount.
-     * @return the transaction amount
-     */
+    /// Gets the transaction amount.
     public double getAmount() {
         return amount;
     }
 
-    /**
-     * Gets the transaction comment.
-     * @return the transaction comment
-     */
+    /// Gets the transaction comment.
     public String getComment() {
         return comment;
     }
 
-    /**
-     * Gets the transaction date and time.
-     * @return the transaction date and time
-     */
+    /// Gets the transaction date and time.
     public LocalDateTime getDate() {
         return date;
     }

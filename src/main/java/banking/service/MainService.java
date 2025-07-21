@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
 
+
 /**
  * MainService handles the business logic for the main banking operations.
  * This class separates the functional operations from the MainWindow View.
@@ -26,8 +27,10 @@ public class MainService {
     private final User currentUser;
     private Account selectedAccount;
 
+
     /**
      * Creates a new MainService instance for the specified user.
+     *
      * @param userEmail the email of the user to load
      * @throws SQLException if a database error occurs while loading the user
      */
@@ -38,37 +41,25 @@ public class MainService {
         this.currentUser = userManager.loadUser(userEmail);
     }
 
-    /**
-     * Gets the current user.
-     * @return the current user
-     */
+    /// Gets the current user.
     public User getCurrentUser() {
         return currentUser;
     }
 
 
-    /**
-     * Gets the selected account.
-     * @return the selected account
-     */
+    /// Gets the selected account.
     public Account getSelectedAccount() {
         return selectedAccount;
     }
 
 
-    /**
-     * Sets the selected account.
-     * @param account the account to select
-     */
+    /// Sets the selected account.
     public void setSelectedAccount(Account account) {
         this.selectedAccount = account;
     }
 
 
-    /**
-     * Gets all accounts for the current user.
-     * @return AccountListResult containing the list of accounts or error message
-     */
+    /// Gets all accounts for the current user.
     public AccountListResult getUserAccounts() {
         try {
             List<Account> accounts = accountManager.loadAccounts(currentUser.getUserID());
@@ -81,6 +72,7 @@ public class MainService {
 
     /**
      * Handles deposit operation.
+     *
      * @param amountText the amount to deposit as a string
      * @return TransactionResult indicating success or failure with message
      */
@@ -111,6 +103,7 @@ public class MainService {
 
     /**
      * Handles withdrawal operation.
+     *
      * @param amountText the amount to withdraw as a string
      * @return TransactionResult indicating success or failure with message
      */
@@ -143,7 +136,12 @@ public class MainService {
 
 
     /**
-     * Handles transfer operation
+     * Handles transfer operation.
+     *
+     * @param accountNumberText the recipient account number as a string.
+     * @param amountText        the amount to transfer as a string.
+     * @param comment           optional comment for the transfer.
+     * @return a TransactionResult indicating success or failure with message.
      */
     public TransactionResult handleTransfer(String accountNumberText, String amountText, String comment) {
         if (selectedAccount == null)
@@ -187,9 +185,7 @@ public class MainService {
     }
 
 
-    /**
-     * Handles opening a new account
-     */
+    /// Handles opening a new account
     public AccountResult handleOpenAccount() {
         try {
             Random random = new Random();
@@ -208,9 +204,7 @@ public class MainService {
     }
 
 
-    /**
-     * Handles freezing an account
-     */
+    /// Handles freezing an account
     public AccountResult handleFreezeAccount() {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
@@ -225,9 +219,7 @@ public class MainService {
     }
 
 
-    /**
-     * Handles unfreezing an account
-     */
+    /// Handles unfreezing an account
     public AccountResult handleUnfreezeAccount() {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
@@ -242,9 +234,7 @@ public class MainService {
     }
 
 
-    /**
-     * Handles closing an account
-     */
+    /// Handles closing an account
     public AccountResult handleCloseAccount() {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
@@ -263,9 +253,7 @@ public class MainService {
     }
 
 
-    /**
-     * Gets transactions for the selected account
-     */
+    /// Gets transactions for the selected account
     public TransactionListResult getTransactions() {
         if (selectedAccount == null)
             return new TransactionListResult(false, "No account selected.", null);
@@ -279,9 +267,7 @@ public class MainService {
     }
 
 
-    /**
-     * Navigates to login window
-     */
+    /// Navigates to login window
     public NavigationResult navigateToLoginWindow() {
         try {
             new LoginWindow();
@@ -293,7 +279,12 @@ public class MainService {
 
 
     /**
-     * Saves a transaction record
+     * Saves a transaction record to the database.
+     *
+     * @param sender   the account sending the money
+     * @param receiver the account receiving the money
+     * @param amount   the amount of money transferred
+     * @param comment  an optional comment for the transaction
      */
     private void saveTransaction(Account sender, Account receiver, double amount, String comment) {
         try {
@@ -306,33 +297,23 @@ public class MainService {
     }
 
 
-    /**
-     * Result class for transaction operations
-     */
+    /// Result class for transaction operations
     public record TransactionResult(boolean success, String message) { }
 
 
-    /**
-     * Result class for account operations
-     */
+    /// Result class for account operations
     public record AccountResult(boolean success, String message) { }
 
 
-    /**
-     * Result class for account list operations
-     */
+    /// Result class for account list operations
     public record AccountListResult(boolean success, String errorMessage, List<Account> accounts) { }
 
 
-    /**
-     * Result class for transaction list operations
-     */
+    /// Result class for transaction list operations
     public record TransactionListResult(boolean success, String errorMessage, List<Transaction> transactions) { }
 
 
-    /**
-     * Result class for navigation operations
-     */
+    /// Result class for navigation operations
     public record NavigationResult(boolean success, String errorMessage) { }
 
 }

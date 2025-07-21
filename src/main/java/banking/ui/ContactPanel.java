@@ -8,6 +8,7 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+
 /**
  * Panel component for managing contacts in the banking application.
  * Encapsulates all contact-related UI and functionality.
@@ -35,10 +36,8 @@ public class ContactPanel extends JPanel {
 
         JPanel titlePanel = createTitlePanel();
         add(titlePanel);
-
         JPanel inputPanel = createInputPanel();
         add(inputPanel);
-
         JPanel contactListPanel = createContactListPanel();
         add(contactListPanel);
 
@@ -46,6 +45,7 @@ public class ContactPanel extends JPanel {
     }
 
 
+    /// Creates the title panel with the application title
     private JPanel createTitlePanel() {
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         JLabel titleLabel = new JLabel("Contact Manager");
@@ -55,7 +55,7 @@ public class ContactPanel extends JPanel {
         return titlePanel;
     }
 
-
+    /// Creates the input panel for adding new contacts
     private JPanel createInputPanel() {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -105,6 +105,7 @@ public class ContactPanel extends JPanel {
     }
 
 
+    /// Creates the contact list panel with search functionality
     private JPanel createContactListPanel() {
         JPanel contactListPanel = new JPanel();
         contactListPanel.setLayout(new BoxLayout(contactListPanel, BoxLayout.Y_AXIS));
@@ -138,6 +139,7 @@ public class ContactPanel extends JPanel {
     }
 
 
+    /// Saves a new contact based on the input fields
     private void saveContact() {
         String name = nameField.getText().trim();
         String accountNumberText = accountField.getText().trim();
@@ -164,9 +166,7 @@ public class ContactPanel extends JPanel {
     }
 
 
-    /**
-     * Loads all contacts into the list
-     */
+    /// Loads all contacts into the list
     public void loadContactsToList() {
         ContactService.ContactListResult result = contactService.loadContacts();
         contactListModel.clear();
@@ -181,9 +181,7 @@ public class ContactPanel extends JPanel {
     }
 
 
-    /**
-     * Filters the contact list based on a search query
-     */
+    /// Filters the contact list based on a search query
     private void filterContactList(String query) {
         ContactService.ContactListResult result = contactService.filterContacts(query);
         contactListModel.clear();
@@ -198,11 +196,13 @@ public class ContactPanel extends JPanel {
     }
 
 
+    /// Displays an error message dialog
     private void showErrorMessage(String message) {
         JOptionPane.showMessageDialog(parentFrame, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
 
+    /// Displays a success message dialog
     private void showSuccessMessage(String message) {
         JOptionPane.showMessageDialog(parentFrame, message, "Success", JOptionPane.INFORMATION_MESSAGE);
     }

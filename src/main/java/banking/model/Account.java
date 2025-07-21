@@ -3,6 +3,7 @@ package banking.model;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
  * Represents a bank account in the banking system.
  * Each account has an ID, belongs to a user, has a unique account number, balance, and can be frozen.
@@ -15,6 +16,7 @@ public class Account {
     private double balance;
     private boolean isFrozen;
     private List<Transaction> transactions;
+
 
     /**
      * Creates a new Account with specified account ID, user ID, account number, balance, and frozen status.
@@ -33,6 +35,7 @@ public class Account {
         transactions = new ArrayList<>();
     }
 
+
     /**
      * Creates a new Account with user ID, account number, balance, and frozen status. Account ID is set to 0.
      * @param user_id the user ID who owns this account
@@ -49,75 +52,51 @@ public class Account {
         transactions = new ArrayList<>();
     }
 
-    /**
-     * Gets the account ID.
-     * @return the account ID
-     */
+    /// Gets the account ID.
     public int getAccountID() {
         return accountID;
     }
 
-    /**
-     * Gets the user ID who owns this account.
-     * @return the user ID
-     */
+    /// Gets the user ID who owns this account.
     public int getUserID() {
         return userID;
     }
 
-    /**
-     * Gets the account number.
-     * @return the account number
-     */
+    /// Gets the account number.
     public int getAccountNumber() {
         return accountNumber;
     }
 
-    /**
-     * Gets the current balance of the account.
-     * @return the current balance
-     */
+    /// Gets the current balance of the account.
     public double getBalance() {
         return balance;
     }
 
-    /**
-     * Checks if the account is frozen.
-     * @return true if the account is frozen, false otherwise
-     */
+    /// Checks if the account is frozen.
     public boolean isFrozen() {
         return isFrozen;
     }
 
-    /**
-     * Gets a copy of the account's transaction list.
-     * @return a new list containing all transactions
-     */
+    /// Gets a copy of the account's transaction list.
     public List<Transaction> getTransactions() {
         return new ArrayList<>(transactions);
     }
 
-    /**
-     * Sets the transaction list for this account.
-     * @param t the list of transactions to set
-     */
+    /// Sets the transaction list for this account.
     public void setTransactions(List<Transaction> t) {
         transactions = t;
     }
 
-    /**
-     * Freezes the account, preventing transactions.
-     */
+    /// Freezes the account, preventing transactions.
     public void freeze() {
         isFrozen = true;
     }
 
-    /**
-     * Unfreezes the account, allowing transactions.
-     */
+    /// Unfreezes the account, allowing transactions.
     public void unfreeze() {
         isFrozen = false;
     }
+
 
     /**
      * Deposits the specified amount into this account.

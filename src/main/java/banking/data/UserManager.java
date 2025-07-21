@@ -2,12 +2,16 @@ package banking.data;
 
 import banking.model.User;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Base64;
 
 
 /**
@@ -22,6 +26,7 @@ public class UserManager {
     public static final String DOMAIN_REGEX = "^[a-z]{2,}$";
 
     private final Connection connection;
+    private final SecureRandom secureRandom;
 
 
     /**
@@ -31,11 +36,80 @@ public class UserManager {
      */
     public UserManager() throws SQLException {
         connection = DatabaseManager.getInstance().getConnection();
+        secureRandom = new SecureRandom();
     }
 
 
     /**
-     * Registers a user and saves their email, password and date
+     * Generates a random salt for password hashing.
+     *
+     * @return a Base64 encoded salt string
+     */
+    private String generateSalt() {
+        byte[] salt = new byte[16];
+        secureRandom.nextBytes(salt);
+        return Base64.getEncoder().encodeToString(salt);
+    }
+
+
+    /**
+     * Hashes a password with the given salt using SHA-256.
+     *
+     * @param password the plain text password
+     * @param salt     the salt to use for hashing
+     * @return the hashed password as a Base64 encoded string
+     * @throws RuntimeException if SHA-256 algorithm is not available
+     */
+    private String hashPassword(String password, String salt) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(Base64.getDecoder().decode(salt));
+            byte[] hashedPassword = md.digest(password.getBytes());
+            return Base64.getEncoder().encodeToString(hashedPassword);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("SHA-256 algorithm not available", e);
+        }
+    }
+
+
+    /**
+     * Creates a combined salt:hash string for storage.
+     *
+     * @param password the plain text password to hash
+     * @return a string in format "salt:hash"
+     */
+    private String createPasswordHash(String password) {
+        String salt = generateSalt();
+        String hash = hashPassword(password, salt);
+        return salt + ":" + hash;
+    }
+
+
+    /**
+     * Verifies a password against a stored salt:hash combination.
+     *
+     * @param password           the plain text password to verify
+     * @param storedPasswordHash the stored password in format "salt:hash"
+     * @return true if the password matches, false otherwise
+     */
+    private boolean verifyPassword(String password, String storedPasswordHash) {
+        if (storedPasswordHash == null || !storedPasswordHash.contains(":"))
+            return password.equals(storedPasswordHash);  // Handle legacy plain text passwords for backward compatibility
+
+        String[] parts = storedPasswordHash.split(":", 2);
+
+        if (parts.length != 2)
+            return false;
+
+        String salt = parts[0];
+        String storedHash = parts[1];
+        String hashedInput = hashPassword(password, salt);
+        return hashedInput.equals(storedHash);
+    }
+
+
+    /**
+     * Registers a user and saves their email, hashed password and date
      * of registry in the database.
      *
      * @param user the user to be registered
@@ -46,11 +120,14 @@ public class UserManager {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfRegistry = user.getDateOfRegistry().format(formatter);
 
+        // Hash the password with salt
+        String hashedPassword = createPasswordHash(user.getPassword());
+
         String query = "INSERT INTO Users (email, password, datetime) VALUES (?, ?, ?)";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, user.getEmail());
-            statement.setString(2, user.getPassword());
+            statement.setString(2, hashedPassword);
             statement.setString(3, dateOfRegistry);
             statement.executeUpdate();
 
@@ -84,6 +161,7 @@ public class UserManager {
 
     /**
      * Checks if the given email and password belong to the same user.
+     * Supports both hashed passwords and legacy plain text passwords.
      *
      * @param email    the email to be found
      * @param password the password to be checked
@@ -99,7 +177,11 @@ public class UserManager {
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, email);
             try (ResultSet result = statement.executeQuery()) {
-                return result.next() && password.equals(result.getString("password"));
+                if (result.next()) {
+                    String storedPassword = result.getString("password");
+                    return verifyPassword(password, storedPassword);
+                }
+                return false;
             }
         }
     }

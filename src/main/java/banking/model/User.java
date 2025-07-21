@@ -17,12 +17,14 @@ public class User {
     private final List<Account> accounts;
     private int userID;
 
+
     /**
      * Creates a new User with specified ID, email, password, and registration date.
+     *
      * @param id the user ID
-     * @param e the email address
-     * @param p the password
-     * @param d the registration date
+     * @param e  the email address
+     * @param p  the password
+     * @param d  the registration date
      */
     public User(int id, String e, String p, LocalDateTime d) {
         userID = id;
@@ -32,8 +34,10 @@ public class User {
         accounts = new ArrayList<>();
     }
 
+
     /**
      * Creates a new User with email, password, and registration date. User ID is set to 0.
+     *
      * @param e the email address
      * @param p the password
      * @param d the registration date
@@ -45,6 +49,7 @@ public class User {
         dateOfRegistry = d;
         accounts = new ArrayList<>();
     }
+
 
     /// Gets the user ID.
     public int getUserID() {

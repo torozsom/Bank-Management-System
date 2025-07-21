@@ -43,8 +43,10 @@ public class ContactManager {
      */
     public static List<Contact> loadContacts() throws IOException {
         try (FileReader reader = new FileReader(FILE_NAME)) {
-            return new Gson().fromJson(reader, new TypeToken<List<Contact>>() {
-            }.getType());
+            return new Gson().fromJson(
+                    reader,
+                    new TypeToken<List<Contact>>(){}.getType()
+            );
         } catch (IOException e) {
             return new ArrayList<>();
         }

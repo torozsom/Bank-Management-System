@@ -71,13 +71,26 @@ public class TransactionManager {
     /**
      * Searches for transactions based on the given account in the
      * database and returns them as a list of Transaction objects.
+     * Uses optimized JOIN query to avoid N+1 query problem.
      *
      * @param a the account to search transactions for
      * @return a List of Transactions that involve the given account (as sender or receiver)
      * @throws SQLException when connection is unsuccessful
      */
     public List<Transaction> loadTransactions(Account a) throws SQLException {
-        String query = "SELECT * FROM Transactions WHERE receiver_account_number = ? OR sender_account_number = ?";
+        String query = """
+                SELECT t.transaction_id, t.amount, t.comment, t.date,
+                       s.account_id as sender_id, s.user_id as sender_user_id, s.account_number as sender_number, 
+                       s.balance as sender_balance, s.is_frozen as sender_frozen,
+                       r.account_id as receiver_id, r.user_id as receiver_user_id, r.account_number as receiver_number, 
+                       r.balance as receiver_balance, r.is_frozen as receiver_frozen
+                FROM Transactions t
+                JOIN Accounts s ON t.sender_account_number = s.account_number
+                JOIN Accounts r ON t.receiver_account_number = r.account_number
+                WHERE t.receiver_account_number = ? OR t.sender_account_number = ?
+                ORDER BY t.date DESC
+                """;
+
         List<Transaction> transactions = new ArrayList<>();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
@@ -87,8 +100,6 @@ public class TransactionManager {
             try (ResultSet resultSet = statement.executeQuery()) {
                 while (resultSet.next()) {
                     int transactionID = resultSet.getInt("transaction_id");
-                    int senderNumber = resultSet.getInt("sender_account_number");
-                    int receiverNumber = resultSet.getInt("receiver_account_number");
                     double amount = resultSet.getDouble("amount");
                     String comment = resultSet.getString("comment");
 
@@ -96,11 +107,25 @@ public class TransactionManager {
                     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
                     LocalDateTime localDateTime = LocalDateTime.parse(date, formatter);
 
-                    if (accountManager.accountExists(senderNumber) && accountManager.accountExists(receiverNumber)) {
-                        Account sender = accountManager.loadAccount(senderNumber);
-                        Account receiver = accountManager.loadAccount(receiverNumber);
-                        transactions.add(new Transaction(transactionID, sender, receiver, amount, comment, localDateTime));
-                    }
+                    // Create sender account from joined data
+                    Account sender = new Account(
+                            resultSet.getInt("sender_id"),
+                            resultSet.getInt("sender_user_id"),
+                            resultSet.getInt("sender_number"),
+                            resultSet.getDouble("sender_balance"),
+                            resultSet.getBoolean("sender_frozen")
+                    );
+
+                    // Create receiver account from joined data
+                    Account receiver = new Account(
+                            resultSet.getInt("receiver_id"),
+                            resultSet.getInt("receiver_user_id"),
+                            resultSet.getInt("receiver_number"),
+                            resultSet.getDouble("receiver_balance"),
+                            resultSet.getBoolean("receiver_frozen")
+                    );
+
+                    transactions.add(new Transaction(transactionID, sender, receiver, amount, comment, localDateTime));
                 }
             }
         }

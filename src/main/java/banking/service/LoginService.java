@@ -15,8 +15,10 @@ public class LoginService {
 
     private final UserManager userManager;
 
+
     /**
      * Creates a new LoginService instance and initializes the UserManager.
+     *
      * @throws SQLException if a database error occurs during initialization
      */
     public LoginService() throws SQLException {
@@ -85,7 +87,6 @@ public class LoginService {
 
     /// Result class for authentication operations.
     public record AuthenticationResult(boolean success, String message) { }
-
 
     /// Result class for navigation operations.
     public record NavigationResult(boolean success, String errorMessage) { }

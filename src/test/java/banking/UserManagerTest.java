@@ -17,26 +17,22 @@ class UserManagerTest {
 
     private UserManager userManager;
 
-
-    @BeforeEach
-    void setUp() throws SQLException {
-        userManager = new UserManager();
-    }
-
-
-    @AfterEach
-    void tearDown() throws SQLException {
-        userManager.deleteUser("testuser@example.com");
-        userManager.deleteUser("anotheruser@example.com");
-    }
-
-
     @org.junit.jupiter.api.AfterAll
     static void tearDownAll() throws SQLException {
         // Close the database connection
         DatabaseManager.getInstance().closeConnection();
     }
 
+    @BeforeEach
+    void setUp() throws SQLException {
+        userManager = new UserManager();
+    }
+
+    @AfterEach
+    void tearDown() throws SQLException {
+        userManager.deleteUser("testuser@example.com");
+        userManager.deleteUser("anotheruser@example.com");
+    }
 
     @Test
     void testSaveUser() throws SQLException {
@@ -92,7 +88,9 @@ class UserManagerTest {
         User loadedUser = userManager.loadUser(email);
         assertNotNull(loadedUser, "loadUser should return a valid User object for existing email");
         assertEquals(email, loadedUser.getEmail(), "Loaded user's email should match the saved email");
-        assertEquals(password, loadedUser.getPassword(), "Loaded user's password should match the saved password");
+
+        assertTrue(userManager.authenticateUser(email, password), "Authentication should work with original password");
+        assertFalse(userManager.authenticateUser(email, "wrongpassword"), "Authentication should fail with wrong password");
 
         LocalDateTime truncatedLoadedDate = loadedUser.getDateOfRegistry().withNano(0);
         assertEquals(now, truncatedLoadedDate, "Loaded user's date of registry should match the saved date (to seconds precision)");

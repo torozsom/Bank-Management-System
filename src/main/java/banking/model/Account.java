@@ -20,11 +20,12 @@ public class Account {
 
     /**
      * Creates a new Account with specified account ID, user ID, account number, balance, and frozen status.
-     * @param acc_id the account ID
+     *
+     * @param acc_id  the account ID
      * @param user_id the user ID who owns this account
-     * @param num the account number
-     * @param bal the initial balance
-     * @param fr the frozen status
+     * @param num     the account number
+     * @param bal     the initial balance
+     * @param fr      the frozen status
      */
     public Account(int acc_id, int user_id, int num, double bal, boolean fr) {
         accountID = acc_id;
@@ -38,10 +39,11 @@ public class Account {
 
     /**
      * Creates a new Account with user ID, account number, balance, and frozen status. Account ID is set to 0.
+     *
      * @param user_id the user ID who owns this account
-     * @param num the account number
-     * @param bal the initial balance
-     * @param fr the frozen status
+     * @param num     the account number
+     * @param bal     the initial balance
+     * @param fr      the frozen status
      */
     public Account(int user_id, int num, double bal, boolean fr) {
         accountID = 0;

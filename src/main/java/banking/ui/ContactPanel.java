@@ -5,6 +5,8 @@ import banking.service.ContactService;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -117,12 +119,26 @@ public class ContactPanel extends JPanel {
         searchField.setPreferredSize(new Dimension(300, 25));
         searchField.setFont(new Font("Times New Roman", Font.BOLD, 16));
         searchField.setText("Search by name or account number");
+
+        searchField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                searchField.setText("");
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {
+                loadContactsToList();
+            }
+        });
+
         searchField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyReleased(KeyEvent e) {
                 filterContactList(searchField.getText());
             }
         });
+
         searchPanel.add(searchField);
         contactListPanel.add(searchPanel);
 
@@ -171,13 +187,11 @@ public class ContactPanel extends JPanel {
         ContactService.ContactListResult result = contactService.loadContacts();
         contactListModel.clear();
 
-        if (result.success()) {
-            for (Contact contact : result.contacts()) {
+        if (result.success())
+            for (Contact contact : result.contacts())
                 contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
-            }
-        } else {
+        else
             showErrorMessage(result.errorMessage());
-        }
     }
 
 
@@ -186,13 +200,11 @@ public class ContactPanel extends JPanel {
         ContactService.ContactListResult result = contactService.filterContacts(query);
         contactListModel.clear();
 
-        if (result.success()) {
-            for (Contact contact : result.contacts()) {
+        if (result.success())
+            for (Contact contact : result.contacts())
                 contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
-            }
-        } else {
+        else
             showErrorMessage(result.errorMessage());
-        }
     }
 
 

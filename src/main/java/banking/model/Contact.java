@@ -13,7 +13,8 @@ public class Contact {
 
     /**
      * Creates a new Contact with the specified name and account number.
-     * @param n the contact's name
+     *
+     * @param n   the contact's name
      * @param num the contact's account number
      */
     public Contact(String n, int num) {

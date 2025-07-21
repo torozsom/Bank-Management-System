@@ -52,6 +52,7 @@ public class MainWindow extends JFrame {
         currentUser = mainService.getCurrentUser();
 
         MainService.AccountListResult accountsResult = mainService.getUserAccounts();
+
         if (accountsResult.success() && !accountsResult.accounts().isEmpty()) {
             List<Account> accounts = accountsResult.accounts();
             currentUser.addAllAccounts(accounts);
@@ -85,6 +86,7 @@ public class MainWindow extends JFrame {
         verticalScrollBar.setUnitIncrement(10);
         setContentPane(scrollPane);
 
+        refreshPage();
         setVisible(true);
     }
 
@@ -111,7 +113,6 @@ public class MainWindow extends JFrame {
         fileMenu.add(logOutItem);
 
         menuBar.add(fileMenu);
-
         setJMenuBar(menuBar);
     }
 
@@ -359,11 +360,12 @@ public class MainWindow extends JFrame {
 
         if (result.success()) {
             showSuccessMessage(result.message());
-            refreshPage();
             clearFields(accountField, amountField, commentField);
         } else {
             showErrorMessage(result.message());
         }
+
+        refreshPage();
     }
 
 
@@ -631,7 +633,7 @@ public class MainWindow extends JFrame {
     }
 
 
-    /// updates the content of the transaction table real-time
+    /// Updates the content of the transaction table real-time
     private void updateTransactionTable() {
         if (currentAccount == null) return;
 

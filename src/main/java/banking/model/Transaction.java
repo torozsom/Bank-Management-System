@@ -16,8 +16,10 @@ public class Transaction {
     private final String comment;
     private final LocalDateTime date;
 
+
     /**
      * Creates a new Transaction with sender, receiver, amount, comment, and date. Transaction ID is set to 0.
+     *
      * @param s the sender account
      * @param r the receiver account
      * @param a the transaction amount
@@ -33,14 +35,16 @@ public class Transaction {
         date = d;
     }
 
+
     /**
      * Creates a new Transaction with specified ID, sender, receiver, amount, comment, and date.
+     *
      * @param id the transaction ID
-     * @param s the sender account
-     * @param r the receiver account
-     * @param a the transaction amount
-     * @param c the transaction comment
-     * @param d the transaction date and time
+     * @param s  the sender account
+     * @param r  the receiver account
+     * @param a  the transaction amount
+     * @param c  the transaction comment
+     * @param d  the transaction date and time
      */
     public Transaction(int id, Account s, Account r, double a, String c, LocalDateTime d) {
         transactionID = id;
@@ -50,6 +54,7 @@ public class Transaction {
         comment = c;
         date = d;
     }
+
 
     /// Gets the transaction ID.
     public int getTransactionID() {

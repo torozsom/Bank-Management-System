@@ -41,6 +41,7 @@ public class MainService {
         this.currentUser = userManager.loadUser(userEmail);
     }
 
+
     /// Gets the current user.
     public User getCurrentUser() {
         return currentUser;
@@ -56,6 +57,72 @@ public class MainService {
     /// Sets the selected account.
     public void setSelectedAccount(Account account) {
         this.selectedAccount = account;
+    }
+
+
+    /**
+     * Validates that an account is selected.
+     *
+     * @return ValidationResult containing success status and message
+     */
+    private ValidationResult validateAccountSelected() {
+        if (selectedAccount == null)
+            return new ValidationResult(false, "No account selected.");
+        return new ValidationResult(true, "Account selected.");
+    }
+
+
+    /**
+     * Validates and parses an amount string.
+     *
+     * @param amountText the amount string to validate and parse
+     * @return AmountValidationResult containing success status, message, and parsed amount
+     */
+    private AmountValidationResult validateAndParseAmount(String amountText) {
+        if (amountText == null || amountText.trim().isEmpty())
+            return new AmountValidationResult(false, "Please enter an amount.", 0.0);
+
+        try {
+            double amount = Double.parseDouble(amountText.trim());
+            if (amount <= 0)
+                return new AmountValidationResult(false, "Amount must be positive.", amount);
+
+            return new AmountValidationResult(true, "Amount is valid.", amount);
+        } catch (NumberFormatException ex) {
+            return new AmountValidationResult(false, "Invalid amount format.", 0.0);
+        }
+    }
+
+
+    /**
+     * Validates and parses an account number string.
+     *
+     * @param accountNumberText the account number string to validate and parse
+     * @return AccountNumberValidationResult containing success status, message, and parsed account number
+     */
+    private AccountNumberValidationResult validateAndParseAccountNumber(String accountNumberText) {
+        if (accountNumberText == null || accountNumberText.trim().isEmpty())
+            return new AccountNumberValidationResult(false, "Please enter account number.", 0);
+
+        try {
+            int accountNumber = Integer.parseInt(accountNumberText.trim());
+            return new AccountNumberValidationResult(true, "Account number is valid.", accountNumber);
+        } catch (NumberFormatException ex) {
+            return new AccountNumberValidationResult(false, "Invalid account number format.", 0);
+        }
+    }
+
+
+    /**
+     * Validates that the selected account has sufficient balance for a transaction.
+     *
+     * @param amount the amount to validate against the balance
+     * @return ValidationResult containing success status and message
+     */
+    private ValidationResult validateSufficientBalance(double amount) {
+        if (selectedAccount.getBalance() < amount)
+            return new ValidationResult(false, "Insufficient balance.");
+        return new ValidationResult(true, "Sufficient balance available.");
     }
 
 
@@ -77,24 +144,21 @@ public class MainService {
      * @return TransactionResult indicating success or failure with message
      */
     public TransactionResult handleDeposit(String amountText) {
-        if (selectedAccount == null)
-            return new TransactionResult(false, "No account selected.");
+        // Validate account selection
+        ValidationResult accountValidation = validateAccountSelected();
+        if (!accountValidation.success())
+            return new TransactionResult(false, accountValidation.message());
 
-        if (amountText == null || amountText.trim().isEmpty())
-            return new TransactionResult(false, "Please enter an amount.");
+        // Validate and parse amount
+        AmountValidationResult amountValidation = validateAndParseAmount(amountText);
+        if (!amountValidation.success())
+            return new TransactionResult(false, amountValidation.message());
 
         try {
-            double amount = Double.parseDouble(amountText.trim());
-            if (amount <= 0)
-                return new TransactionResult(false, "Amount must be positive.");
-
-            accountManager.depositMoney(selectedAccount, amount);
-            saveTransaction(selectedAccount, selectedAccount, amount, "Deposit");
-
+            accountManager.depositMoney(selectedAccount, amountValidation.amount());
+            saveTransaction(selectedAccount, selectedAccount, amountValidation.amount(), "Deposit");
             return new TransactionResult(true, "Deposit successful!");
 
-        } catch (NumberFormatException ex) {
-            return new TransactionResult(false, "Invalid amount format.");
         } catch (SQLException ex) {
             return new TransactionResult(false, "Deposit failed: " + ex.getMessage());
         }
@@ -108,27 +172,26 @@ public class MainService {
      * @return TransactionResult indicating success or failure with message
      */
     public TransactionResult handleWithdraw(String amountText) {
-        if (selectedAccount == null)
-            return new TransactionResult(false, "No account selected.");
+        // Validate account selection
+        ValidationResult accountValidation = validateAccountSelected();
+        if (!accountValidation.success())
+            return new TransactionResult(false, accountValidation.message());
 
-        if (amountText == null || amountText.trim().isEmpty())
-            return new TransactionResult(false, "Please enter an amount.");
+        // Validate and parse amount
+        AmountValidationResult amountValidation = validateAndParseAmount(amountText);
+        if (!amountValidation.success())
+            return new TransactionResult(false, amountValidation.message());
+
+        // Validate sufficient balance
+        ValidationResult balanceValidation = validateSufficientBalance(amountValidation.amount());
+        if (!balanceValidation.success())
+            return new TransactionResult(false, balanceValidation.message());
 
         try {
-            double amount = Double.parseDouble(amountText.trim());
-            if (amount <= 0)
-                return new TransactionResult(false, "Amount must be positive.");
-
-            if (selectedAccount.getBalance() < amount)
-                return new TransactionResult(false, "Insufficient balance.");
-
-            accountManager.withdrawMoney(selectedAccount, amount);
-            saveTransaction(selectedAccount, selectedAccount, amount, "Withdrawal");
-
+            accountManager.withdrawMoney(selectedAccount, amountValidation.amount());
+            saveTransaction(selectedAccount, selectedAccount, amountValidation.amount(), "Withdrawal");
             return new TransactionResult(true, "Withdrawal successful!");
 
-        } catch (NumberFormatException ex) {
-            return new TransactionResult(false, "Invalid amount format.");
         } catch (SQLException ex) {
             return new TransactionResult(false, "Withdrawal failed: " + ex.getMessage());
         }
@@ -144,41 +207,46 @@ public class MainService {
      * @return a TransactionResult indicating success or failure with message.
      */
     public TransactionResult handleTransfer(String accountNumberText, String amountText, String comment) {
-        if (selectedAccount == null)
-            return new TransactionResult(false, "No account selected.");
+        // Validate account selection
+        ValidationResult accountValidation = validateAccountSelected();
+        if (!accountValidation.success())
+            return new TransactionResult(false, accountValidation.message());
 
-        if (accountNumberText == null || accountNumberText.trim().isEmpty())
-            return new TransactionResult(false, "Please enter recipient account number.");
+        // Validate and parse recipient account number
+        AccountNumberValidationResult accountNumberValidation = validateAndParseAccountNumber(accountNumberText);
+        if (!accountNumberValidation.success())
+            return new TransactionResult(false, accountNumberValidation.message());
 
-        if (amountText == null || amountText.trim().isEmpty())
-            return new TransactionResult(false, "Please enter an amount.");
+        // Validate and parse amount
+        AmountValidationResult amountValidation = validateAndParseAmount(amountText);
+        if (!amountValidation.success())
+            return new TransactionResult(false, amountValidation.message());
+
+        // Validate sufficient balance
+        ValidationResult balanceValidation = validateSufficientBalance(amountValidation.amount());
+        if (!balanceValidation.success())
+            return new TransactionResult(false, balanceValidation.message());
 
         try {
-            int recipientAccountNumber = Integer.parseInt(accountNumberText.trim());
-            double amount = Double.parseDouble(amountText.trim());
-
-            if (amount <= 0)
-                return new TransactionResult(false, "Amount must be positive.");
-
-            if (selectedAccount.getBalance() < amount)
-                return new TransactionResult(false, "Insufficient balance.");
-
-            Account recipientAccount = accountManager.loadAccount(recipientAccountNumber);
+            // Load and validate recipient account
+            Account recipientAccount = accountManager.loadAccount(accountNumberValidation.accountNumber());
             if (recipientAccount == null)
                 return new TransactionResult(false, "Recipient account not found.");
 
             if (recipientAccount.getAccountNumber() == selectedAccount.getAccountNumber())
                 return new TransactionResult(false, "Cannot transfer to the same account.");
 
-            accountManager.transferMoney(selectedAccount.getAccountNumber(), recipientAccountNumber, amount);
+            // Perform transfer
+            accountManager.transferMoney(selectedAccount.getAccountNumber(),
+                    accountNumberValidation.accountNumber(),
+                    amountValidation.amount());
 
+            // Save transaction record
             String finalComment = (comment != null && !comment.trim().isEmpty()) ? comment.trim() : "Transfer";
-            saveTransaction(selectedAccount, recipientAccount, amount, finalComment);
+            saveTransaction(selectedAccount, recipientAccount, amountValidation.amount(), finalComment);
 
             return new TransactionResult(true, "Transfer successful!");
 
-        } catch (NumberFormatException ex) {
-            return new TransactionResult(false, "Invalid number format.");
         } catch (SQLException ex) {
             return new TransactionResult(false, "Transfer failed: " + ex.getMessage());
         }
@@ -188,11 +256,12 @@ public class MainService {
     /// Handles opening a new account
     public AccountResult handleOpenAccount() {
         try {
-            Random random = new Random();
-            int accountNumber = 100000 + random.nextInt(900000);
-
-            while (accountManager.loadAccount(accountNumber) != null)
-                accountNumber = 100000 + random.nextInt(900000);
+            // Generate unique account number
+            Random rand = new Random();
+            int accountNumber;
+            do {
+                accountNumber = rand.nextInt(10000000, 99999999);
+            } while (accountManager.accountExists(accountNumber));
 
             Account newAccount = new Account(0, currentUser.getUserID(), accountNumber, 0.0, false);
             accountManager.saveAccount(newAccount);
@@ -300,20 +369,25 @@ public class MainService {
     /// Result class for transaction operations
     public record TransactionResult(boolean success, String message) { }
 
-
     /// Result class for account operations
     public record AccountResult(boolean success, String message) { }
-
 
     /// Result class for account list operations
     public record AccountListResult(boolean success, String errorMessage, List<Account> accounts) { }
 
-
     /// Result class for transaction list operations
     public record TransactionListResult(boolean success, String errorMessage, List<Transaction> transactions) { }
 
-
     /// Result class for navigation operations
     public record NavigationResult(boolean success, String errorMessage) { }
+
+    /// Result class for validation operations
+    public record ValidationResult(boolean success, String message) { }
+
+    /// Result class for amount validation operations
+    public record AmountValidationResult(boolean success, String message, double amount) { }
+
+    /// Result class for account number validation operations
+    public record AccountNumberValidationResult(boolean success, String message, int accountNumber) { }
 
 }

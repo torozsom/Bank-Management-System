@@ -19,6 +19,7 @@ public class AccountManager {
 
     private final Connection connection;
 
+
     /**
      * Constructor for AccountManager that initializes the database connection.
      *
@@ -131,6 +132,7 @@ public class AccountManager {
 
     /**
      * Deposits the specified amount into the given account.
+     * Uses atomic database operations to prevent race conditions.
      *
      * @param acc    the account to deposit to
      * @param amount the amount to deposit
@@ -142,10 +144,8 @@ public class AccountManager {
         if (amount <= 0)
             throw new IllegalArgumentException("Deposit amount must be positive");
 
-        if (acc.isFrozen())
-            throw new IllegalArgumentException("Cannot deposit to a frozen account");
-
-        String query = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ?";
+        // Use atomic database operation with frozen check
+        String query = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ? AND is_frozen = 0";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setDouble(1, amount);
@@ -153,16 +153,28 @@ public class AccountManager {
             int rowsAffected = statement.executeUpdate();
 
             if (rowsAffected > 0) {
+                // Update in-memory object only after successful database update
                 acc.deposit(amount);
                 return true;
+            } else {
+                // Check if account exists and is frozen to provide specific error message
+                Account currentAccount = loadAccount(acc.getAccountNumber());
+
+                if (currentAccount == null)
+                    throw new IllegalArgumentException("Account does not exist");
+
+                if (currentAccount.isFrozen())
+                    throw new IllegalArgumentException("Cannot deposit to a frozen account");
+
+                return false;
             }
-            return false;
         }
     }
 
 
     /**
      * Withdraws the specified amount from the given account.
+     * Uses atomic database operations to prevent race conditions.
      *
      * @param acc    the account to withdraw from
      * @param amount the amount to withdraw
@@ -174,40 +186,49 @@ public class AccountManager {
         if (amount <= 0)
             throw new IllegalArgumentException("Withdrawal amount must be positive");
 
-        if (acc.isFrozen())
-            throw new IllegalArgumentException("Cannot withdraw from a frozen account");
-
-        // Check for sufficient funds
-        Account account = loadAccount(acc.getAccountNumber());
-        if (account.getBalance() < amount)
-            throw new IllegalArgumentException("Insufficient funds");
-
-        String query = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ?";
+        // Use atomic database operation with balance and frozen checks
+        String query = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ? AND balance >= ? AND is_frozen = 0";
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setDouble(1, amount);
             statement.setInt(2, acc.getAccountNumber());
+            statement.setDouble(3, amount);
             int rowsAffected = statement.executeUpdate();
 
             if (rowsAffected > 0) {
+                // Update in-memory object only after successful database update
                 acc.withdraw(amount);
                 return true;
+            } else {
+                // Check specific failure reason to provide appropriate error message
+                Account currentAccount = loadAccount(acc.getAccountNumber());
+
+                if (currentAccount == null)
+                    throw new IllegalArgumentException("Account does not exist");
+
+                if (currentAccount.isFrozen())
+                    throw new IllegalArgumentException("Cannot withdraw from a frozen account");
+
+                if (currentAccount.getBalance() < amount)
+                    throw new IllegalArgumentException("Insufficient funds");
+
+                return false;
             }
-            return false;
         }
     }
 
 
     /**
      * Transfers the specified amount from one account to another.
+     * Uses atomic database operations within a transaction to prevent race conditions.
      *
      * @param sourceAccount      the source account number
      * @param destinationAccount the destination account number
      * @param amount             the amount to transfer
      * @return true if the transfer was successful, false otherwise
      * @throws SQLException             when a database error occurs
-     * @throws IllegalArgumentException if the amount is not positive, exceeds the source balance,
-     *                                  the destination account doesn't exist, or either account is frozen
+     * @throws IllegalArgumentException if the amount is not positive, accounts are the same,
+     *                                  accounts don't exist, insufficient funds, or either account is frozen
      */
     public boolean transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {
         if (amount <= 0)
@@ -216,49 +237,73 @@ public class AccountManager {
         if (sourceAccount == destinationAccount)
             throw new IllegalArgumentException("Source and destination accounts cannot be the same");
 
-        Account source = loadAccount(sourceAccount);
-        if (source == null)
-            throw new IllegalArgumentException("Source account does not exist");
+        // Use atomic operations within transaction with all validations in SQL
+        String deductQuery = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ? AND balance >= ? AND is_frozen = 0";
+        String addQuery = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ? AND is_frozen = 0";
 
-        if (source.isFrozen())
-            throw new IllegalArgumentException("Cannot transfer from a frozen account");
-
-        if (source.getBalance() < amount)
-            throw new IllegalArgumentException("Insufficient funds in source account");
-
-        Account destination = loadAccount(destinationAccount);
-        if (destination == null)
-            throw new IllegalArgumentException("Destination account does not exist");
-
-        if (destination.isFrozen())
-            throw new IllegalArgumentException("Cannot transfer to a frozen account");
-
-        String deductQuery = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ?";
-        String addQuery = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ?";
-
-        try (PreparedStatement deductStatement = connection.prepareStatement(deductQuery);
-             PreparedStatement addStatement = connection.prepareStatement(addQuery)) {
+        try {
             connection.setAutoCommit(false);
 
-            // Deduct from source
-            deductStatement.setDouble(1, amount);
-            deductStatement.setInt(2, sourceAccount);
-            deductStatement.executeUpdate();
+            // First, deduct from source account with atomic validation
+            try (PreparedStatement deductStatement = connection.prepareStatement(deductQuery)) {
+                deductStatement.setDouble(1, amount);
+                deductStatement.setInt(2, sourceAccount);
+                deductStatement.setDouble(3, amount);
+                int sourceRowsAffected = deductStatement.executeUpdate();
 
-            // Add to destination
-            addStatement.setDouble(1, amount);
-            addStatement.setInt(2, destinationAccount);
-            addStatement.executeUpdate();
+                if (sourceRowsAffected == 0) {
+                    connection.rollback();
+                    // Determine specific failure reason
+                    Account source = loadAccount(sourceAccount);
+                    if (source == null)
+                        throw new IllegalArgumentException("Source account does not exist");
 
-            connection.commit();
-            source.withdraw(amount);
-            destination.deposit(amount);
-            return true;
+                    if (source.isFrozen())
+                        throw new IllegalArgumentException("Cannot transfer from a frozen account");
+
+                    if (source.getBalance() < amount)
+                        throw new IllegalArgumentException("Insufficient funds in source account");
+
+                    throw new IllegalArgumentException("Transfer failed: source account validation failed");
+                }
+
+                // Then, add to destination account with atomic validation
+                try (PreparedStatement addStatement = connection.prepareStatement(addQuery)) {
+                    addStatement.setDouble(1, amount);
+                    addStatement.setInt(2, destinationAccount);
+                    int destRowsAffected = addStatement.executeUpdate();
+
+                    if (destRowsAffected == 0) {
+                        connection.rollback();
+                        // Determine specific failure reason
+                        Account destination = loadAccount(destinationAccount);
+
+                        if (destination == null)
+                            throw new IllegalArgumentException("Destination account does not exist");
+
+                        if (destination.isFrozen())
+                            throw new IllegalArgumentException("Cannot transfer to a frozen account");
+
+                        throw new IllegalArgumentException("Transfer failed: destination account validation failed");
+                    }
+
+                    // Both operations successful, commit transaction
+                    connection.commit();
+
+                    // Update in-memory objects only after successful database operations
+                    Account source = loadAccount(sourceAccount);
+                    Account destination = loadAccount(destinationAccount);
+                    if (source != null) source.withdraw(amount);
+                    if (destination != null) destination.deposit(amount);
+
+                    return true;
+                }
+            }
         } catch (SQLException ex) {
             connection.rollback();
             throw ex;
         } finally {
-            connection.setAutoCommit(true); // Restore default behavior
+            connection.setAutoCommit(true);
         }
     }
 

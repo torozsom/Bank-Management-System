@@ -1,11 +1,14 @@
+<div align="center">
+   
 # 🏦 Bank Management System
 
 [![Java](https://img.shields.io/badge/Java-22-orange.svg)](https://openjdk.java.net/)
 [![SQLite](https://img.shields.io/badge/SQLite-3.47.0-blue.svg)](https://www.sqlite.org/)
 [![JUnit](https://img.shields.io/badge/JUnit-Jupiter-green.svg)](https://junit.org/junit5/)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A comprehensive **Java-based Bank Management System** featuring modern architecture, advanced security, and intuitive user interface. Built with enterprise-grade patterns and best practices for reliable financial operations.
+
+</div>
 
 ---
 

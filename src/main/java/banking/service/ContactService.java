@@ -48,8 +48,8 @@ public class ContactService {
 
             // Check for duplicates
             boolean exists = contacts.stream()
-                    .anyMatch(contact -> contact.getName().equalsIgnoreCase(finalName) ||
-                            contact.getAccountNumber() == finalAccountNumber);
+                    .anyMatch(contact -> contact.name().equalsIgnoreCase(finalName) ||
+                            contact.accountNumber() == finalAccountNumber);
 
             if (exists)
                 return new ContactResult(false, "Contact already exists.");
@@ -97,8 +97,8 @@ public class ContactService {
             String lowerQuery = query.toLowerCase().trim();
             List<Contact> filteredContacts = contacts.stream()
                     .filter(contact ->
-                            contact.getName().toLowerCase().contains(lowerQuery) ||
-                                    String.valueOf(contact.getAccountNumber()).contains(lowerQuery))
+                            contact.name().toLowerCase().contains(lowerQuery) ||
+                                    String.valueOf(contact.accountNumber()).contains(lowerQuery))
                     .collect(Collectors.toList());
 
             return new ContactListResult(true, null, filteredContacts);

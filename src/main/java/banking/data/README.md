@@ -297,24 +297,28 @@ List<Contact> contacts = ContactManager.loadContacts();
 The data package has been enhanced with comprehensive security improvements:
 
 ### **Password Security**
+
 - **SHA-256 Hashing**: All passwords are hashed using SHA-256 algorithm
 - **Cryptographic Salt**: Each password uses a unique 16-byte salt generated with SecureRandom
 - **Salt Storage**: Passwords stored as "salt:hash" format for maximum security
 - **Backward Compatibility**: Supports legacy plain text passwords during migration
 
 ### **Database Security**
+
 - **Foreign Key Constraints**: Enabled to ensure referential integrity
 - **Connection Validation**: Automatic connection health checks with 5-second timeout
 - **Connection Timeouts**: 30-second busy timeout to prevent hanging connections
 - **Thread Safety**: Synchronized connection management prevents race conditions
 
 ### **Transaction Security**
+
 - **Atomic Operations**: All financial operations use atomic SQL queries
 - **Race Condition Prevention**: Database-level validation prevents concurrent access issues
 - **Query Optimization**: JOIN queries prevent N+1 problems and timing attacks
 - **Transaction Rollback**: Automatic rollback on operation failures
 
 ### **Data Integrity**
+
 - **Database-Level Validation**: Account frozen status and balance checks in SQL
 - **Consistent State**: In-memory objects updated only after successful database operations
 - **Ordered Results**: Transaction history ordered by date for audit consistency

@@ -17,10 +17,10 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             try {
                 new LoginWindow();
-            } catch (SQLException e) {
-                e.printStackTrace();
+            } catch (SQLException ex) {
+                System.err.println("Failed to initialize FlatLaf Look and Feel: " + ex.getMessage());
                 JOptionPane.showMessageDialog(null, "Failed to connect to the database: "
-                        + e.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
+                        + ex.getMessage(), "Database Error", JOptionPane.ERROR_MESSAGE);
             }
         });
     }

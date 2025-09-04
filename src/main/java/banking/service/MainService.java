@@ -20,7 +20,6 @@ import java.util.Random;
  */
 public class MainService {
 
-    private final UserManager userManager;
     private final AccountManager accountManager;
     private final TransactionManager transactionManager;
 
@@ -35,7 +34,7 @@ public class MainService {
      * @throws SQLException if a database error occurs while loading the user
      */
     public MainService(String userEmail) throws SQLException {
-        this.userManager = new UserManager();
+        UserManager userManager = new UserManager();
         this.accountManager = new AccountManager();
         this.transactionManager = new TransactionManager();
         this.currentUser = userManager.loadUser(userEmail);
@@ -45,12 +44,6 @@ public class MainService {
     /// Gets the current user.
     public User getCurrentUser() {
         return currentUser;
-    }
-
-
-    /// Gets the selected account.
-    public Account getSelectedAccount() {
-        return selectedAccount;
     }
 
 

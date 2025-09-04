@@ -44,22 +44,22 @@ public class TransactionManager {
      * @throws SQLException if a database access error occurs
      */
     public boolean saveTransaction(Transaction transaction) throws SQLException {
-        if (!accountManager.accountExists(transaction.getSender().getAccountNumber())
-                || !accountManager.accountExists(transaction.getReceiver().getAccountNumber()))
+        if (!accountManager.accountExists(transaction.sender().getAccountNumber())
+                || !accountManager.accountExists(transaction.receiver().getAccountNumber()))
             return false;
 
         String query = "INSERT INTO Transactions " +
                 "(sender_account_number, receiver_account_number, amount, comment, date) VALUES (?, ?, ?, ?, ?)";
 
-        LocalDateTime date = transaction.getDate();
+        LocalDateTime date = transaction.date();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfTransaction = date.format(formatter);
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, transaction.getSender().getAccountNumber());
-            statement.setInt(2, transaction.getReceiver().getAccountNumber());
-            statement.setDouble(3, transaction.getAmount());
-            statement.setString(4, transaction.getComment());
+            statement.setInt(1, transaction.sender().getAccountNumber());
+            statement.setInt(2, transaction.receiver().getAccountNumber());
+            statement.setDouble(3, transaction.amount());
+            statement.setString(4, transaction.comment());
             statement.setString(5, dateOfTransaction);
 
             int rowsAffected = statement.executeUpdate();
@@ -80,9 +80,9 @@ public class TransactionManager {
     public List<Transaction> loadTransactions(Account a) throws SQLException {
         String query = """
                 SELECT t.transaction_id, t.amount, t.comment, t.date,
-                       s.account_id as sender_id, s.user_id as sender_user_id, s.account_number as sender_number, 
+                       s.account_id as sender_id, s.user_id as sender_user_id, s.account_number as sender_number,
                        s.balance as sender_balance, s.is_frozen as sender_frozen,
-                       r.account_id as receiver_id, r.user_id as receiver_user_id, r.account_number as receiver_number, 
+                       r.account_id as receiver_id, r.user_id as receiver_user_id, r.account_number as receiver_number,
                        r.balance as receiver_balance, r.is_frozen as receiver_frozen
                 FROM Transactions t
                 JOIN Accounts s ON t.sender_account_number = s.account_number

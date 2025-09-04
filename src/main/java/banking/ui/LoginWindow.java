@@ -14,14 +14,9 @@ import java.sql.SQLException;
 public class LoginWindow extends JFrame {
 
     private final LoginService loginService;
-    private final Image icon;
 
     private final JTextField emailField;
     private final JPasswordField passwordField;
-    private final JButton loginButton;
-    private final JButton registerButton;
-    private final JLabel emailLabel;
-    private final JLabel passwordLabel;
 
 
     /// Creates and shows the login window of the app.
@@ -34,7 +29,7 @@ public class LoginWindow extends JFrame {
         setLocationRelativeTo(null);
         setResizable(false);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        icon = Toolkit.getDefaultToolkit().getImage("icon.png");
+        Image icon = Toolkit.getDefaultToolkit().getImage("icon.png");
         setIconImage(icon);
 
 
@@ -46,7 +41,7 @@ public class LoginWindow extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
 
-        emailLabel = new JLabel("Email address:");
+        JLabel emailLabel = new JLabel("Email address:");
         emailLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
         emailLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
@@ -64,7 +59,7 @@ public class LoginWindow extends JFrame {
         contentPanel.add(emailField, gbc);
 
 
-        passwordLabel = new JLabel("Password:");
+        JLabel passwordLabel = new JLabel("Password:");
         passwordLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
         passwordLabel.setForeground(Color.BLACK);
         gbc.gridx = 0;
@@ -81,13 +76,13 @@ public class LoginWindow extends JFrame {
         contentPanel.add(passwordField, gbc);
 
 
-        loginButton = new JButton("Login");
+        JButton loginButton = new JButton("Login");
         gbc.gridx = 1;
         gbc.gridy = 2;
         contentPanel.add(loginButton, gbc);
 
 
-        registerButton = new JButton("Register");
+        JButton registerButton = new JButton("Register");
         gbc.gridx = 0;
         gbc.gridy = 2;
         contentPanel.add(registerButton, gbc);
@@ -115,7 +110,7 @@ public class LoginWindow extends JFrame {
             }
         });
 
-        //Proceed to the registation window when clicking the registry button
+        //Proceed to the registration window when clicking the registry button
         registerButton.addActionListener(_ -> {
             LoginService.NavigationResult navResult = loginService.navigateToRegistrationWindow();
             if (navResult.success()) {

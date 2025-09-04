@@ -81,19 +81,9 @@ public class User {
         return new ArrayList<>(accounts);
     }
 
-    /// Adds an account to the user's account list.
-    public void addAccount(Account a) {
-        accounts.add(a);
-    }
-
     /// Adds all accounts from the provided list to the user's account list.
     public void addAllAccounts(List<Account> a) {
         accounts.addAll(a);
-    }
-
-    /// Removes an account from the user's account list.
-    public void removeAccount(Account a) {
-        accounts.remove(a);
     }
 
     /// Clears all accounts from the user's account list.

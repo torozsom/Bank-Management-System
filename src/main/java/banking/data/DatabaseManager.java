@@ -13,6 +13,7 @@ import java.sql.SQLException;
 public class DatabaseManager {
 
     private static final String DATABASE_URL = "jdbc:sqlite:config/Banking.db";
+
     private static DatabaseManager instance;
     private final Object connectionLock = new Object();
     private Connection connection;

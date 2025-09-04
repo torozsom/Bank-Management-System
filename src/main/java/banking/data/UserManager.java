@@ -132,10 +132,8 @@ public class UserManager {
             statement.executeUpdate();
 
             ResultSet result = statement.getGeneratedKeys();
-            if (result.next()) {
-                int userID = result.getInt(1);
-                return userID;
-            }
+            if (result.next())
+                return result.getInt(1);
             return -1;
         }
     }
@@ -217,20 +215,6 @@ public class UserManager {
                 return null;
             }
         }
-    }
-
-
-    /**
-     * Searches for a user based on the given email in the
-     * database and returns it as an Optional.
-     *
-     * @param email the address to be searched for
-     * @return an Optional containing the User if found, or empty if not found
-     * @throws SQLException             when connection is unsuccessful
-     * @throws IllegalArgumentException if email is null or empty
-     */
-    public java.util.Optional<User> findUserByEmail(String email) throws SQLException {
-        return java.util.Optional.ofNullable(loadUser(email));
     }
 
 

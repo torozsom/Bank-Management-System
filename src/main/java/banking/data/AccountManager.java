@@ -136,11 +136,10 @@ public class AccountManager {
      *
      * @param acc    the account to deposit to
      * @param amount the amount to deposit
-     * @return true if the deposit was successful, false otherwise
      * @throws SQLException             when a database error occurs
      * @throws IllegalArgumentException if the amount is not positive or the account is frozen
      */
-    public boolean depositMoney(Account acc, double amount) throws SQLException {
+    public void depositMoney(Account acc, double amount) throws SQLException {
         if (amount <= 0)
             throw new IllegalArgumentException("Deposit amount must be positive");
 
@@ -155,7 +154,6 @@ public class AccountManager {
             if (rowsAffected > 0) {
                 // Update in-memory object only after successful database update
                 acc.deposit(amount);
-                return true;
             } else {
                 // Check if account exists and is frozen to provide specific error message
                 Account currentAccount = loadAccount(acc.getAccountNumber());
@@ -166,7 +164,6 @@ public class AccountManager {
                 if (currentAccount.isFrozen())
                     throw new IllegalArgumentException("Cannot deposit to a frozen account");
 
-                return false;
             }
         }
     }
@@ -178,11 +175,10 @@ public class AccountManager {
      *
      * @param acc    the account to withdraw from
      * @param amount the amount to withdraw
-     * @return true if the withdrawal was successful, false otherwise
      * @throws SQLException             when a database error occurs
      * @throws IllegalArgumentException if the amount is not positive, exceeds the balance, or the account is frozen
      */
-    public boolean withdrawMoney(Account acc, double amount) throws SQLException {
+    public void withdrawMoney(Account acc, double amount) throws SQLException {
         if (amount <= 0)
             throw new IllegalArgumentException("Withdrawal amount must be positive");
 
@@ -198,7 +194,6 @@ public class AccountManager {
             if (rowsAffected > 0) {
                 // Update in-memory object only after successful database update
                 acc.withdraw(amount);
-                return true;
             } else {
                 // Check specific failure reason to provide appropriate error message
                 Account currentAccount = loadAccount(acc.getAccountNumber());
@@ -212,7 +207,6 @@ public class AccountManager {
                 if (currentAccount.getBalance() < amount)
                     throw new IllegalArgumentException("Insufficient funds");
 
-                return false;
             }
         }
     }
@@ -225,12 +219,11 @@ public class AccountManager {
      * @param sourceAccount      the source account number
      * @param destinationAccount the destination account number
      * @param amount             the amount to transfer
-     * @return true if the transfer was successful, false otherwise
      * @throws SQLException             when a database error occurs
      * @throws IllegalArgumentException if the amount is not positive, accounts are the same,
      *                                  accounts don't exist, insufficient funds, or either account is frozen
      */
-    public boolean transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {
+    public void transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {
         if (amount <= 0)
             throw new IllegalArgumentException("Transfer amount must be positive");
 
@@ -296,7 +289,6 @@ public class AccountManager {
                     if (source != null) source.withdraw(amount);
                     if (destination != null) destination.deposit(amount);
 
-                    return true;
                 }
             }
         } catch (SQLException ex) {

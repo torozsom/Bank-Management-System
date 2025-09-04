@@ -99,7 +99,7 @@ public class ContactPanel extends JPanel {
         gbc.anchor = GridBagConstraints.EAST;
         JButton saveButton = new JButton("Save");
         saveButton.setPreferredSize(new Dimension(100, 25));
-        saveButton.addActionListener(e -> saveContact());
+        saveButton.addActionListener(_ -> saveContact());
         inputPanel.add(saveButton, gbc);
 
         inputPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -169,7 +169,7 @@ public class ContactPanel extends JPanel {
             ContactService.ContactResult result = contactService.saveContact(name, accountNumberText);
 
             if (result.success()) {
-                showSuccessMessage("Contact saved successfully.");
+                showSuccessMessage();
                 nameField.setText("");
                 accountField.setText("");
                 loadContactsToList();
@@ -189,7 +189,7 @@ public class ContactPanel extends JPanel {
 
         if (result.success())
             for (Contact contact : result.contacts())
-                contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
+                contactListModel.addElement(contact.name() + " - " + contact.accountNumber());
         else
             showErrorMessage(result.errorMessage());
     }
@@ -202,7 +202,7 @@ public class ContactPanel extends JPanel {
 
         if (result.success())
             for (Contact contact : result.contacts())
-                contactListModel.addElement(contact.getName() + " - " + contact.getAccountNumber());
+                contactListModel.addElement(contact.name() + " - " + contact.accountNumber());
         else
             showErrorMessage(result.errorMessage());
     }
@@ -215,8 +215,8 @@ public class ContactPanel extends JPanel {
 
 
     /// Displays a success message dialog
-    private void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(parentFrame, message, "Success", JOptionPane.INFORMATION_MESSAGE);
+    private void showSuccessMessage() {
+        JOptionPane.showMessageDialog(parentFrame, "Contact saved successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
     }
 
 }

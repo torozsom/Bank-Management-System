@@ -30,7 +30,6 @@ public class MainWindow extends JFrame {
     private static final Insets DEFAULT_INSETS = new Insets(5, 5, 5, 5);
 
 
-    private final JScrollPane scrollPane;
     private final JPanel contentPanel;
     private final MainService mainService;
     private final User currentUser;
@@ -80,7 +79,7 @@ public class MainWindow extends JFrame {
         setUpContactManager();
         transactionsTable();
 
-        scrollPane = new JScrollPane(contentPanel);
+        JScrollPane scrollPane = new JScrollPane(contentPanel);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
         verticalScrollBar.setUnitIncrement(10);
@@ -117,6 +116,29 @@ public class MainWindow extends JFrame {
     }
 
 
+    /// Creates the refresh button and its action listener
+    private JButton getRefreshButton() {
+        JButton refreshButton = new JButton("Refresh");
+        refreshButton.addActionListener(_ -> {
+            try {
+                // Refresh the accounts from ViewModel
+                MainService.AccountListResult accountsResult = mainService.getUserAccounts();
+                if (accountsResult.success()) {
+                    currentUser.clearAccounts();
+                    currentUser.addAllAccounts(accountsResult.accounts());
+                    updateAccountSelector();
+                    refreshPage();
+                } else {
+                    showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
+                }
+            } catch (SQLException ex) {
+                showErrorMessage("Error refreshing accounts: " + ex.getMessage());
+            }
+        });
+        return refreshButton;
+    }
+
+
     /// Introduces the account chooser and the balance contents
     private void setUpAccountChooser() {
         JPanel accountChooserPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -136,7 +158,9 @@ public class MainWindow extends JFrame {
         accountSelector.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
         accountSelector.addActionListener(_ -> {
-            int selectedAccountNumber = (int) accountSelector.getSelectedItem();
+            Integer selectedAccountNumber = (Integer) accountSelector.getSelectedItem();
+            if (selectedAccountNumber == null)
+                return;
             // Find the account from the user's accounts list
             for (Account account : currentUser.getAccounts()) {
                 if (account.getAccountNumber() == selectedAccountNumber) {
@@ -148,25 +172,10 @@ public class MainWindow extends JFrame {
             }
         });
 
+
         accountChooserPanel.add(accountSelector);
 
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(_ -> {
-            try {
-                // Refresh the accounts from ViewModel
-                MainService.AccountListResult accountsResult = mainService.getUserAccounts();
-                if (accountsResult.success()) {
-                    currentUser.clearAccounts();
-                    currentUser.addAllAccounts(accountsResult.accounts());
-                    updateAccountSelector();
-                    refreshPage();
-                } else {
-                    showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
-                }
-            } catch (SQLException ex) {
-                showErrorMessage("Error refreshing accounts: " + ex.getMessage());
-            }
-        });
+        JButton refreshButton = getRefreshButton();
 
         accountChooserPanel.add(refreshButton);
         accountChooserPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -601,6 +610,25 @@ public class MainWindow extends JFrame {
     }
 
 
+    /// Loads transactions into a JTable
+    private JTable loadTransactions(Object[] headers, List<Transaction> transactions) {
+        Object[][] data = new Object[transactions.size()][5];
+        for (int i = 0; i < transactions.size(); i++) {
+            data[i][0] = transactions.get(i).sender().getAccountNumber();
+            data[i][1] = transactions.get(i).receiver().getAccountNumber();
+            data[i][2] = transactions.get(i).amount();
+            data[i][3] = transactions.get(i).comment();
+            data[i][4] = transactions.get(i).date().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        }
+
+        JTable recentTransactions = new JTable(data, headers);
+        recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
+        recentTransactions.setRowHeight(30);
+
+        return recentTransactions;
+    }
+
+
     /// Creates a table that shows the user's transaction history
     public void transactionsTable() {
         JPanel transactionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -614,18 +642,7 @@ public class MainWindow extends JFrame {
         Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
         List<Transaction> transactions = currentAccount.getTransactions();
 
-        Object[][] data = new Object[transactions.size()][5];
-        for (int i = 0; i < transactions.size(); i++) {
-            data[i][0] = transactions.get(i).getSender().getAccountNumber();
-            data[i][1] = transactions.get(i).getReceiver().getAccountNumber();
-            data[i][2] = transactions.get(i).getAmount();
-            data[i][3] = transactions.get(i).getComment();
-            data[i][4] = transactions.get(i).getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
-
-        JTable recentTransactions = new JTable(data, headers);
-        recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
-        recentTransactions.setRowHeight(30);
+        JTable recentTransactions = loadTransactions(headers, transactions);
         recentTransactions.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         recentTransactions.getTableHeader().setReorderingAllowed(false);
 
@@ -648,18 +665,7 @@ public class MainWindow extends JFrame {
             List<Transaction> transactions = transactionsResult.transactions();
             currentAccount.setTransactions(transactions);
 
-            Object[][] data = new Object[transactions.size()][5];
-            for (int i = 0; i < transactions.size(); i++) {
-                data[i][0] = transactions.get(i).getSender().getAccountNumber();
-                data[i][1] = transactions.get(i).getReceiver().getAccountNumber();
-                data[i][2] = transactions.get(i).getAmount();
-                data[i][3] = transactions.get(i).getComment();
-                data[i][4] = transactions.get(i).getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            }
-
-            JTable recentTransactions = new JTable(data, headers);
-            recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
-            recentTransactions.setRowHeight(30);
+            JTable recentTransactions = loadTransactions(headers, transactions);
             recentTransactions.getTableHeader().setReorderingAllowed(false);
 
             contentPanel.add(new JScrollPane(recentTransactions));

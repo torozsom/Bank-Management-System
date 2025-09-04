@@ -27,10 +27,6 @@ class TransactionManagerTest {
 
     private Connection connection;
     private TransactionManager transactionManager;
-    private AccountManager accountManager;
-    private UserManager userManager;
-    private User testUser1;
-    private User testUser2;
     private Account senderAccount;
     private Account receiverAccount;
 
@@ -38,8 +34,8 @@ class TransactionManagerTest {
     @BeforeAll
     void setupDatabase() throws SQLException {
         connection = DriverManager.getConnection("jdbc:sqlite:config/Banking.db");
-        userManager = new UserManager();
-        accountManager = new AccountManager();
+        UserManager userManager = new UserManager();
+        AccountManager accountManager = new AccountManager();
         transactionManager = new TransactionManager();
 
         try (Statement statement = connection.createStatement()) {
@@ -48,8 +44,8 @@ class TransactionManagerTest {
             statement.executeUpdate("DELETE FROM Users");
         }
 
-        testUser1 = new User("test1@example.com", "password1", LocalDateTime.now());
-        testUser2 = new User("test2@example.com", "password2", LocalDateTime.now());
+        User testUser1 = new User("test1@example.com", "password1", LocalDateTime.now());
+        User testUser2 = new User("test2@example.com", "password2", LocalDateTime.now());
         testUser1.setUserID(userManager.saveUser(testUser1));
         testUser2.setUserID(userManager.saveUser(testUser2));
 
@@ -72,7 +68,7 @@ class TransactionManagerTest {
     void testLoadTransactionsForAccount() throws SQLException {
         List<Transaction> existingTransactions = transactionManager.loadTransactions(senderAccount);
         for (Transaction transaction : existingTransactions)
-            transactionManager.deleteTransaction(transaction.getTransactionID());
+            transactionManager.deleteTransaction(transaction.transactionID());
 
         Transaction transaction1 = new Transaction(senderAccount, receiverAccount, 1000.0, "Test Load 1", LocalDateTime.now());
         Transaction transaction2 = new Transaction(senderAccount, receiverAccount, 2000.0, "Test Load 2", LocalDateTime.now());
@@ -81,9 +77,9 @@ class TransactionManagerTest {
         List<Transaction> senderTransactions = transactionManager.loadTransactions(senderAccount);
 
         assertEquals(2, senderTransactions.size(), "Sender account should have 2 transactions");
-        assertTrue(senderTransactions.stream().anyMatch(t -> t.getAmount() == 1000.0 && t.getComment().equals("Test Load 1")),
+        assertTrue(senderTransactions.stream().anyMatch(t -> t.amount() == 1000.0 && t.comment().equals("Test Load 1")),
                 "First transaction should be loaded correctly");
-        assertTrue(senderTransactions.stream().anyMatch(t -> t.getAmount() == 2000.0 && t.getComment().equals("Test Load 2")),
+        assertTrue(senderTransactions.stream().anyMatch(t -> t.amount() == 2000.0 && t.comment().equals("Test Load 2")),
                 "Second transaction should be loaded correctly");
     }
 
@@ -97,19 +93,19 @@ class TransactionManagerTest {
         assertFalse(senderTransactions.isEmpty(), "Sender account should have at least one transaction after saving");
 
         Transaction savedTransaction = senderTransactions.stream()
-                .filter(t -> t.getAmount() == transaction.getAmount() && t.getComment().equals(transaction.getComment()))
+                .filter(t -> t.amount() == transaction.amount() && t.comment().equals(transaction.comment()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("Transaction not found after saving"));
 
-        boolean deleted = transactionManager.deleteTransaction(savedTransaction.getTransactionID());
+        boolean deleted = transactionManager.deleteTransaction(savedTransaction.transactionID());
         assertTrue(deleted, "Transaction should be deleted");
 
         List<Transaction> updatedSenderTransactions = transactionManager.loadTransactions(senderAccount);
-        assertTrue(updatedSenderTransactions.stream().noneMatch(t -> t.getTransactionID() == savedTransaction.getTransactionID()),
+        assertTrue(updatedSenderTransactions.stream().noneMatch(t -> t.transactionID() == savedTransaction.transactionID()),
                 "Deleted transaction should not exist in sender's transactions");
 
         List<Transaction> updatedReceiverTransactions = transactionManager.loadTransactions(receiverAccount);
-        assertTrue(updatedReceiverTransactions.stream().noneMatch(t -> t.getTransactionID() == savedTransaction.getTransactionID()),
+        assertTrue(updatedReceiverTransactions.stream().noneMatch(t -> t.transactionID() == savedTransaction.transactionID()),
                 "Deleted transaction should not exist in receiver's transactions");
     }
 

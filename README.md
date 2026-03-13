@@ -2,8 +2,8 @@
    
 # 🏦 Bank Management System
 
-[![Java](https://img.shields.io/badge/Java-22-orange.svg)](https://openjdk.java.net/)
-[![SQLite](https://img.shields.io/badge/SQLite-3.47.0-blue.svg)](https://www.sqlite.org/)
+[![Java](https://img.shields.io/badge/Java-25-orange.svg)](https://openjdk.java.net/)
+[![SQLite](https://img.shields.io/badge/SQLite-3.50.3.0-blue.svg)](https://www.sqlite.org/)
 [![JUnit](https://img.shields.io/badge/JUnit-Jupiter-green.svg)](https://junit.org/junit5/)
 
 A comprehensive **Java-based Bank Management System** featuring modern architecture, advanced security, and intuitive user interface. Built with enterprise-grade patterns and best practices for reliable financial operations.
@@ -95,7 +95,7 @@ approach for secure database access.*
 
 3. **Run the application**
    ```bash
-   mvn exec:java -Dexec.mainClass="banking.program.Main"
+   mvn exec:java
    ```
 
 ### **Database Setup**
@@ -129,11 +129,11 @@ The application automatically creates the SQLite database (`config/Banking.db`) 
 
 | Component | Technology | Version | Purpose |
 |-----------|------------|---------|---------|
-| **Language** | Java | 22 | Core application development |
-| **Database** | SQLite | 3.47.0 | Data persistence |
-| **UI Framework** | Swing + FlatLaf | 3.2.5 | Modern user interface |
-| **JSON Processing** | Gson | 2.10.1 | Contact data serialization |
-| **Testing** | JUnit Jupiter | Latest | Unit testing framework |
+| **Language** | Java | 25 | Core application development |
+| **Database** | SQLite | 3.50.3.0 | Data persistence |
+| **UI Framework** | Swing + FlatLaf | 3.6.1 | Modern user interface |
+| **JSON Processing** | Gson | 2.13.1 | Contact data serialization |
+| **Testing** | JUnit Jupiter | 5.13.4 | Unit testing framework |
 | **Build Tool** | Maven | 3.6+ | Dependency management |
 
 ---
@@ -196,58 +196,3 @@ mvn test -Dtest=TransactionManagerTest
 - ✅ Financial operations (deposit, withdraw, transfer)
 - ✅ Transaction history and persistence
 - ✅ Database operations and error handling
-
----
-
-## 📁 Project Structure
-
-```
-banking-management-system/
-├── 📄 README.md                          # This file
-├── 📄 pom.xml                            # Maven configuration
-├── 📁 config/
-│   └── 🗄️ Banking.db                     # SQLite database
-├── 📁 src/main/java/banking/
-│   ├── 📁 data/                          # Data access layer
-│   │   ├── 📄 DatabaseManager.java       # Database connection management
-│   │   ├── 📄 UserManager.java           # User operations
-│   │   ├── 📄 AccountManager.java        # Account operations
-│   │   ├── 📄 TransactionManager.java    # Transaction operations
-│   │   ├── 📄 ContactManager.java        # Contact management
-│   │   └── 📄 README.md                  # Data package documentation
-│   ├── 📁 model/                         # Domain model
-│   │   ├── 📄 User.java                  # User entity
-│   │   ├── 📄 Account.java               # Account entity
-│   │   ├── 📄 Transaction.java           # Transaction entity
-│   │   ├── 📄 Contact.java               # Contact entity
-│   │   └── 📄 README.md                  # Model package documentation
-│   ├── 📁 service/                       # Business logic layer
-│   │   ├── 📄 LoginService.java          # Authentication service
-│   │   ├── 📄 RegistrationService.java   # Registration service
-│   │   ├── 📄 MainService.java           # Core banking service
-│   │   ├── 📄 ContactService.java        # Contact service
-│   │   └── 📄 README.md                  # Service package documentation
-│   ├── 📁 ui/                            # User interface layer
-│   │   ├── 📄 LoginWindow.java           # Login interface
-│   │   ├── 📄 RegistrationWindow.java    # Registration interface
-│   │   ├── 📄 MainWindow.java            # Main banking interface
-│   │   └── 📄 ContactPanel.java          # Contact management interface
-│   └── 📁 program/
-│       └── 📄 Main.java                  # Application entry point
-└── 📁 src/test/java/banking/             # Unit tests
-    ├── 📄 UserManagerTest.java           # User management tests
-    ├── 📄 AccountManagerTest.java        # Account management tests
-    └── 📄 TransactionManagerTest.java    # Transaction management tests
-```
-
----
-
-<div align="center">
-
-**Built with ❤️ using Java and modern software engineering practices**
-
-[![Java](https://img.shields.io/badge/Made%20with-Java-orange.svg)](https://java.com)
-[![SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://sqlite.org)
-[![Maven](https://img.shields.io/badge/Built%20with-Maven-red.svg)](https://maven.apache.org)
-
-</div>

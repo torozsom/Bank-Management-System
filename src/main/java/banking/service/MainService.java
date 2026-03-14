@@ -282,8 +282,8 @@ public class MainService {
 
         try {
             accountManager.freezeAccount(selectedAccount);
+            selectedAccount.freeze();
             return new AccountResult(true, "Account frozen successfully!");
-
         } catch (SQLException ex) {
             return new AccountResult(false, "Failed to freeze account: " + ex.getMessage());
         }
@@ -297,8 +297,8 @@ public class MainService {
 
         try {
             accountManager.unfreezeAccount(selectedAccount);
+            selectedAccount.unfreeze();
             return new AccountResult(true, "Account unfrozen successfully!");
-
         } catch (SQLException ex) {
             return new AccountResult(false, "Failed to unfreeze account: " + ex.getMessage());
         }
@@ -317,7 +317,6 @@ public class MainService {
 
             accountManager.deleteAccount(selectedAccount);
             return new AccountResult(true, "Account closed successfully!");
-
         } catch (SQLException ex) {
             return new AccountResult(false, "Failed to close account: " + ex.getMessage());
         }

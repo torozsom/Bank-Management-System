@@ -370,6 +370,17 @@ public class MainWindow extends Stage {
         if (accountsResult.success()) {
             currentUser.clearAccounts();
             currentUser.addAllAccounts(accountsResult.accounts());
+
+            if (currentAccount != null) {
+                for (Account acc : currentUser.getAccounts()) {
+                    if (acc.getAccountNumber() == currentAccount.getAccountNumber()) {
+                        currentAccount = acc;
+                        mainService.setSelectedAccount(currentAccount);
+                        break;
+                    }
+                }
+            }
+
             updateAccountSelectorDropdown();
             refreshPage();
         } else {
@@ -489,10 +500,9 @@ public class MainWindow extends Stage {
      */
     private void handleFreezeAccount() {
         MainService.AccountResult result = mainService.handleFreezeAccount();
-        if (result.success()) {
-            currentAccount.freeze();
+        if (result.success())
             refreshPage();
-        } else showErrorMessage(result.message());
+        else showErrorMessage(result.message());
     }
 
 
@@ -504,7 +514,6 @@ public class MainWindow extends Stage {
     private void handleUnfreezeAccount() {
         MainService.AccountResult result = mainService.handleUnfreezeAccount();
         if (result.success()) {
-            currentAccount.unfreeze();
             refreshPage();
         } else showErrorMessage(result.message());
     }

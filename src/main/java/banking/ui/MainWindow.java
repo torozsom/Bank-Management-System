@@ -72,7 +72,7 @@ public class MainWindow extends Stage {
         setTitle(email);
         this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(true);
-        setMinWidth(1000);
+        setMinWidth(1100);
         setMinHeight(700);
 
         BorderPane root = new BorderPane();

@@ -127,14 +127,14 @@ The application automatically creates the SQLite database (`config/Banking.db`) 
 
 ## 🛠️ Technology Stack
 
-| Component | Technology | Version | Purpose |
-|-----------|------------|---------|---------|
-| **Language** | Java | 25 | Core application development |
-| **Database** | SQLite | 3.50.3.0 | Data persistence |
-| **UI Framework** | Swing + FlatLaf | 3.6.1 | Modern user interface |
-| **JSON Processing** | Gson | 2.13.1 | Contact data serialization |
-| **Testing** | JUnit Jupiter | 5.13.4 | Unit testing framework |
-| **Build Tool** | Maven | 3.6+ | Dependency management |
+| Component | Technology    | Version  | Purpose |
+|-----------|---------------|----------|---------|
+| **Language** | Java          | 25       | Core application development |
+| **Database** | SQLite        | 3.50.3.0 | Data persistence |
+| **UI Framework** | JavaFX    | 25.0.1   | Modern user interface |
+| **JSON Processing** | Gson          | 2.13.1   | Contact data serialization |
+| **Testing** | JUnit Jupiter | 5.13.4   | Unit testing framework |
+| **Build Tool** | Maven         | 3.6+     | Dependency management |
 
 ---
 

@@ -119,7 +119,9 @@ public class ContactPanel extends VBox {
         });
 
         searchField.textProperty().addListener((_, _, newValue) -> filterContactList(newValue));
+
         ListView<String> contactList = new ListView<>(contactListModel);
+        contactList.setPrefHeight(200);
         contactListPanel.getChildren().addAll(searchField, contactList);
 
         return contactListPanel;

@@ -34,6 +34,7 @@ public class ContactPanel extends VBox {
         contactListModel = FXCollections.observableArrayList();
 
         setSpacing(20);
+        setAlignment(Pos.CENTER);
         setPadding(new Insets(20));
 
         getChildren().add(createTitlePanel());
@@ -54,6 +55,7 @@ public class ContactPanel extends VBox {
         titlePanel.setAlignment(Pos.CENTER);
 
         Label titleLabel = new Label("Contact Manager");
+        titleLabel.getStyleClass().add("section-title");
         titlePanel.getChildren().add(titleLabel);
 
         return titlePanel;
@@ -68,27 +70,32 @@ public class ContactPanel extends VBox {
      */
     private GridPane createInputPanel() {
         GridPane inputPanel = new GridPane();
+        inputPanel.setAlignment(Pos.CENTER);
         inputPanel.setHgap(10);
         inputPanel.setVgap(10);
 
-        Label nameLabel = new Label("Name of company / individual:");
+        Label nameLabel = new Label("Name / Company:");
         inputPanel.add(nameLabel, 0, 0);
 
         nameField = new TextField();
+        nameField.setPromptText("Enter name");
         inputPanel.add(nameField, 1, 0);
 
         Label accountLabel = new Label("Account number:");
         inputPanel.add(accountLabel, 0, 1);
 
         accountField = new TextField();
+        accountField.setPromptText("Enter account");
         inputPanel.add(accountField, 1, 1);
 
         Button saveButton = new Button("Save");
+        saveButton.getStyleClass().add("btn-green");
         saveButton.setOnAction(_ -> saveContact());
         inputPanel.add(saveButton, 1, 2);
 
         return inputPanel;
     }
+
 
     /**
      * Creates the contact list panel, which includes a search field and a list view to display contacts.
@@ -97,21 +104,21 @@ public class ContactPanel extends VBox {
      */
     private VBox createContactListPanel() {
         VBox contactListPanel = new VBox();
+        contactListPanel.setAlignment(Pos.CENTER);
         contactListPanel.setSpacing(10);
 
         searchField = new TextField();
-        searchField.setPromptText("Search by name or account number");
+        searchField.setPromptText("Search by name or account number...");
+        searchField.setMaxWidth(Double.MAX_VALUE);
 
         searchField.focusedProperty().addListener((_, _, newValue) -> {
-            if (newValue) { // Focus gained
+            if (newValue)
                 searchField.setText("");
-            } else { // Focus lost
+            else
                 loadContactsToList();
-            }
         });
 
         searchField.textProperty().addListener((_, _, newValue) -> filterContactList(newValue));
-
         ListView<String> contactList = new ListView<>(contactListModel);
         contactListPanel.getChildren().addAll(searchField, contactList);
 

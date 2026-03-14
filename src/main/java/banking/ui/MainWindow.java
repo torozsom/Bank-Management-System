@@ -69,7 +69,7 @@ public class MainWindow extends Stage {
                     (accountsResult.errorMessage() != null ? accountsResult.errorMessage() : "No accounts found"));
         }
 
-        setTitle("Bank Management System - Dashboard");
+        setTitle(email);
         this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(true);
         setMinWidth(1000);
@@ -150,12 +150,13 @@ public class MainWindow extends Stage {
     private VBox createSummaryCard() {
         VBox card = new VBox(10);
         card.getStyleClass().add("card");
+        card.setAlignment(Pos.CENTER);
 
         Label title = new Label("Account Summary");
         title.getStyleClass().add("section-title");
 
         HBox topControls = new HBox(15);
-        topControls.setAlignment(Pos.CENTER_LEFT);
+        topControls.setAlignment(Pos.CENTER);
 
         Label chooseLabel = new Label("Selected Account:");
         accountSelector = new ComboBox<>();
@@ -177,6 +178,7 @@ public class MainWindow extends Stage {
         });
 
         Button refreshButton = new Button("↻ Refresh");
+        refreshButton.getStyleClass().add("btn-blue");
         refreshButton.setOnAction(_ -> handleRefreshAccounts());
 
         topControls.getChildren().addAll(chooseLabel, accountSelector, refreshButton);
@@ -198,11 +200,13 @@ public class MainWindow extends Stage {
     private VBox createAccountActionsCard() {
         VBox card = new VBox(15);
         card.getStyleClass().add("card");
+        card.setAlignment(Pos.CENTER);
 
         Label title = new Label("Quick Actions");
         title.getStyleClass().add("section-title");
 
         GridPane grid = new GridPane();
+        grid.setAlignment(Pos.CENTER);
         grid.setHgap(15);
         grid.setVgap(15);
 
@@ -210,11 +214,13 @@ public class MainWindow extends Stage {
         TextField depositField = new TextField();
         depositField.setPromptText("Amount to deposit");
         depositButton = new Button("Deposit");
+        depositButton.getStyleClass().add("btn-green");
         depositButton.setOnAction(_ -> handleDeposit(depositField));
 
         TextField withdrawField = new TextField();
         withdrawField.setPromptText("Amount to withdraw");
         withdrawButton = new Button("Withdraw");
+        withdrawButton.getStyleClass().add("btn-blue");
         withdrawButton.setOnAction(_ -> handleWithdraw(withdrawField));
 
         grid.add(new Label("Deposit:"), 0, 0);
@@ -236,6 +242,7 @@ public class MainWindow extends Stage {
         transferComField.setPromptText("Comment (optional)");
 
         transferButton = new Button("Transfer");
+        transferButton.getStyleClass().add("btn-blue");
         transferButton.setOnAction(_ -> handleTransfer(transferAccField, transferAmtField, transferComField));
 
         grid.add(new Label("Transfer to:"), 0, 3);
@@ -250,14 +257,22 @@ public class MainWindow extends Stage {
 
         // Account Management
         HBox managementBox = new HBox(10);
+        managementBox.setAlignment(Pos.CENTER);
+
         Button openButton = new Button("Open New Account");
         openButton.setOnAction(_ -> handleOpenAccount());
+        openButton.getStyleClass().add("btn-green");
+
         freezeButton = new Button("Freeze");
+        freezeButton.getStyleClass().add("btn-red");
         freezeButton.setOnAction(_ -> handleFreezeAccount());
+
         unfreezeButton = new Button("Unfreeze");
+        unfreezeButton.getStyleClass().add("btn-blue");
         unfreezeButton.setOnAction(_ -> handleUnfreezeAccount());
+
         Button closeButton = new Button("Close Account");
-        closeButton.setStyle("-fx-text-fill: red;");
+        closeButton.getStyleClass().add("btn-red");
         closeButton.setOnAction(_ -> handleCloseAccount());
 
         managementBox.getChildren().addAll(openButton, freezeButton, unfreezeButton, closeButton);
@@ -288,6 +303,7 @@ public class MainWindow extends Stage {
     private VBox createTransactionsCard() {
         VBox card = new VBox(15);
         card.getStyleClass().add("card");
+        card.setAlignment(Pos.CENTER);
 
         Label title = new Label("Transaction History");
         title.getStyleClass().add("section-title");

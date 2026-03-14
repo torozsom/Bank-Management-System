@@ -234,6 +234,15 @@ public class MainService {
                     accountNumberValidation.accountNumber(),
                     amountValidation.amount());
 
+            selectedAccount.withdraw(amountValidation.amount());
+
+            for (Account acc : currentUser.getAccounts()) {
+                if (acc.getAccountNumber() == accountNumberValidation.accountNumber()) {
+                    acc.deposit(amountValidation.amount());
+                    break;
+                }
+            }
+
             // Save transaction record
             String finalComment = (comment != null && !comment.trim().isEmpty()) ? comment.trim() : "Transfer";
             saveTransaction(selectedAccount, recipientAccount, amountValidation.amount(), finalComment);

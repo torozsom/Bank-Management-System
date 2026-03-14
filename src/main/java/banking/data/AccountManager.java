@@ -282,13 +282,6 @@ public class AccountManager {
 
                     // Both operations successful, commit transaction
                     connection.commit();
-
-                    // Update in-memory objects only after successful database operations
-                    Account source = loadAccount(sourceAccount);
-                    Account destination = loadAccount(destinationAccount);
-                    if (source != null) source.withdraw(amount);
-                    if (destination != null) destination.deposit(amount);
-
                 }
             }
         } catch (SQLException ex) {

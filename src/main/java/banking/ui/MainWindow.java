@@ -175,6 +175,7 @@ public class MainWindow extends Stage {
                     break;
                 }
             }
+            refreshPage();
         });
 
         Button refreshButton = new Button("↻ Refresh");

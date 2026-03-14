@@ -125,7 +125,11 @@ public class MainWindow extends Stage {
         MenuItem logOutItem = new MenuItem("Log Out");
         logOutItem.setOnAction(_ -> {
             close();
-            try { new LoginWindow(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+            try {
+                new LoginWindow();
+            } catch (SQLException ex) {
+                throw new RuntimeException(ex);
+            }
         });
 
         MenuItem exitItem = new MenuItem("Exit");
@@ -351,7 +355,9 @@ public class MainWindow extends Stage {
             currentUser.addAllAccounts(accountsResult.accounts());
             updateAccountSelectorDropdown();
             refreshPage();
-        } else { showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage()); }
+        } else {
+            showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
+        }
     }
 
 
@@ -386,7 +392,9 @@ public class MainWindow extends Stage {
             List<Transaction> transactions = transactionsResult.transactions();
             currentAccount.setTransactions(transactions);
             transactionsTable.setItems(FXCollections.observableArrayList(transactions));
-        } else { showErrorMessage("Error updating transactions: " + transactionsResult.errorMessage()); }
+        } else {
+            showErrorMessage("Error updating transactions: " + transactionsResult.errorMessage());
+        }
     }
 
 
@@ -428,7 +436,7 @@ public class MainWindow extends Stage {
      * If there is an error during the transfer, an error message is displayed to the user.
      *
      * @param accountField The TextField from which to retrieve the target account number for the transfer.
-     * @param amountField The TextField from which to retrieve the transfer amount.
+     * @param amountField  The TextField from which to retrieve the transfer amount.
      * @param commentField The TextField from which to retrieve any optional comment for the transfer.
      */
     private void handleTransfer(TextField accountField, TextField amountField, TextField commentField) {
@@ -496,8 +504,8 @@ public class MainWindow extends Stage {
 
         boolean isLastAccount = currentUser.getAccounts().size() == 1;
         String confirmMessage = isLastAccount
-                        ? "Are you sure? This deletes your user profile as well."
-                        : "Are you sure you want to close this account?";
+                ? "Are you sure? This deletes your user profile as well."
+                : "Are you sure you want to close this account?";
 
         if (confirmAction(confirmMessage)) {
             MainService.AccountResult result = mainService.handleCloseAccount();
@@ -509,7 +517,9 @@ public class MainWindow extends Stage {
                     currentUser.getAccounts().remove(currentAccount);
                     handleRefreshAccounts();
                 }
-            } else { showErrorMessage(result.message()); }
+            } else {
+                showErrorMessage(result.message());
+            }
         }
     }
 
@@ -521,7 +531,9 @@ public class MainWindow extends Stage {
      */
     private void showErrorMessage(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
 
@@ -532,7 +544,9 @@ public class MainWindow extends Stage {
      */
     private void showSuccessMessage(String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
 
@@ -544,7 +558,8 @@ public class MainWindow extends Stage {
      */
     private boolean confirmAction(String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setHeaderText(null); alert.setContentText(message);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }

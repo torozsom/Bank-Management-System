@@ -4,6 +4,7 @@ import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;
 import banking.service.MainService;
+
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,9 +15,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
@@ -37,7 +36,6 @@ public class MainWindow extends Stage {
     private final User currentUser;
     private Account currentAccount;
 
-    private final VBox contentPanel;
     private ComboBox<Integer> accountSelector;
     private Label balanceLabel;
     private Button depositButton;
@@ -71,28 +69,45 @@ public class MainWindow extends Stage {
                     (accountsResult.errorMessage() != null ? accountsResult.errorMessage() : "No accounts found"));
         }
 
-        setTitle(email);
+        setTitle("Bank Management System - Dashboard");
         this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
-        setResizable(false);
+        setResizable(true);
+        setMinWidth(1000);
+        setMinHeight(700);
 
-        VBox root = new VBox();
-        root.getChildren().add(createMenuBar());
+        BorderPane root = new BorderPane();
+        root.setTop(createMenuBar());
 
-        contentPanel = new VBox();
-        contentPanel.setSpacing(20);
-        contentPanel.setPadding(new Insets(20));
+        VBox dashboardContent = new VBox(20);
+        dashboardContent.setPadding(new Insets(25));
 
-        setUpAccountChooser();
-        setUpAccountActions();
-        setUpContactManager();
-        setUpTransactionsTable();
+        dashboardContent.getChildren().add(createSummaryCard());
 
-        ScrollPane scrollPane = new ScrollPane(contentPanel);
+        HBox middleRow = new HBox(20);
+        VBox actionsCard = createAccountActionsCard();
+        VBox contactsCard = createContactManagerCard();
+
+        HBox.setHgrow(actionsCard, Priority.ALWAYS);
+        HBox.setHgrow(contactsCard, Priority.ALWAYS);
+        middleRow.getChildren().addAll(actionsCard, contactsCard);
+
+        dashboardContent.getChildren().add(middleRow);
+        dashboardContent.getChildren().add(createTransactionsCard());
+
+        ScrollPane scrollPane = new ScrollPane(dashboardContent);
         scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-control-inner-background: #f0f2f5;");
 
-        root.getChildren().add(scrollPane);
+        root.setCenter(scrollPane);
+        Scene scene = new Scene(root, 1100, 800);
 
-        Scene scene = new Scene(root, 900, 600);
+        try {
+            String cssPath = Objects.requireNonNull(getClass().getResource("/main-styles.css")).toExternalForm();
+            scene.getStylesheets().add(cssPath);
+        } catch (NullPointerException e) {
+            System.err.println("Warning: main-styles.css not found!");
+        }
+
         setScene(scene);
         refreshPage();
         show();
@@ -107,43 +122,46 @@ public class MainWindow extends Stage {
     private MenuBar createMenuBar() {
         MenuBar menuBar = new MenuBar();
         Menu fileMenu = new Menu("File");
+        MenuItem logOutItem = new MenuItem("Log Out");
+        logOutItem.setOnAction(_ -> {
+            close();
+            try { new LoginWindow(); } catch (SQLException ex) { throw new RuntimeException(ex); }
+        });
 
         MenuItem exitItem = new MenuItem("Exit");
         exitItem.setOnAction(_ -> System.exit(0));
 
-        MenuItem logOutItem = new MenuItem("Log Out");
-        logOutItem.setOnAction(_ -> {
-            close();
-            try {
-                new LoginWindow();
-            } catch (SQLException ex) {
-                throw new RuntimeException(ex);
-            }
-        });
-
-        fileMenu.getItems().addAll(logOutItem, exitItem);
+        fileMenu.getItems().addAll(logOutItem, new SeparatorMenuItem(), exitItem);
         menuBar.getMenus().add(fileMenu);
         return menuBar;
     }
 
 
     /**
-     * Sets up the account chooser section of the main window, allowing users to select from their available accounts,
-     * view their balance, and refresh the account list.
+     * Creates the account summary card, which displays the user's current
+     * account balance and allows them to select different accounts.
+     *
+     * @return A VBox containing the account summary information and controls.
      */
-    private void setUpAccountChooser() {
-        HBox accountChooserPanel = new HBox(10);
-        accountChooserPanel.setAlignment(Pos.CENTER);
+    private VBox createSummaryCard() {
+        VBox card = new VBox(10);
+        card.getStyleClass().add("card");
 
-        Label chooseLabel = new Label("Choose account:");
+        Label title = new Label("Account Summary");
+        title.getStyleClass().add("section-title");
 
+        HBox topControls = new HBox(15);
+        topControls.setAlignment(Pos.CENTER_LEFT);
+
+        Label chooseLabel = new Label("Selected Account:");
         accountSelector = new ComboBox<>();
+        accountSelector.setStyle("-fx-font-size: 14px; -fx-padding: 2;");
         updateAccountSelectorDropdown();
 
+        // Account selector's event handler
         accountSelector.setOnAction(_ -> {
             Integer selectedAccountNumber = accountSelector.getValue();
             if (selectedAccountNumber == null) return;
-
             for (Account account : currentUser.getAccounts()) {
                 if (account.getAccountNumber() == selectedAccountNumber) {
                     currentAccount = account;
@@ -154,326 +172,124 @@ public class MainWindow extends Stage {
             }
         });
 
-        Button refreshButton = new Button("Refresh");
+        Button refreshButton = new Button("↻ Refresh");
         refreshButton.setOnAction(_ -> handleRefreshAccounts());
 
-        accountChooserPanel.getChildren().addAll(chooseLabel, accountSelector, refreshButton);
+        topControls.getChildren().addAll(chooseLabel, accountSelector, refreshButton);
 
         balanceLabel = new Label();
-        HBox balancePanel = new HBox(balanceLabel);
-        balancePanel.setAlignment(Pos.CENTER);
+        balanceLabel.getStyleClass().add("balance-label");
 
-        contentPanel.getChildren().addAll(accountChooserPanel, balancePanel);
+        card.getChildren().addAll(title, topControls, new Separator(), balanceLabel);
+        return card;
     }
 
 
     /**
-     * Handles the action of refreshing the user's account list, updating the
-     * account selector dropdown and refreshing the page to reflect any changes.
-     * If there is an error during the refresh process, an error message is displayed to the user.
+     * Creates the account actions card, which provides quick access to common account operations
+     * such as depositing, withdrawing, transferring funds, and managing account status.
+     *
+     * @return A VBox containing the controls for performing account actions.
      */
-    private void handleRefreshAccounts() {
-        MainService.AccountListResult accountsResult = mainService.getUserAccounts();
-        if (accountsResult.success()) {
-            currentUser.clearAccounts();
-            currentUser.addAllAccounts(accountsResult.accounts());
-            updateAccountSelectorDropdown();
-            refreshPage();
-        } else {
-            showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
-        }
-    }
+    private VBox createAccountActionsCard() {
+        VBox card = new VBox(15);
+        card.getStyleClass().add("card");
 
-
-    /**
-     * Updates the account selector dropdown with the current user's accounts,
-     * ensuring that the currently selected account is displayed if it exists.
-     */
-    private void updateAccountSelectorDropdown() {
-        ObservableList<Integer> accountNums = FXCollections.observableArrayList();
-        for (Account acc : currentUser.getAccounts()) {
-            accountNums.add(acc.getAccountNumber());
-        }
-        accountSelector.setItems(accountNums);
-        if (currentAccount != null) {
-            accountSelector.setValue(currentAccount.getAccountNumber());
-        }
-    }
-
-
-    /**
-     * Refreshes the main window page, updating the balance label and enabling or disabling action buttons
-     * based on the current account's status (e.g., frozen or active). It also updates the transaction table data
-     * to reflect any recent transactions associated with the current account.
-     */
-    private void refreshPage() {
-        if (currentAccount != null) {
-            balanceLabel.setText("Balance: " + currentAccount.getBalance() + " Ft");
-
-            depositButton.setDisable(currentAccount.isFrozen());
-            withdrawButton.setDisable(currentAccount.isFrozen());
-            transferButton.setDisable(currentAccount.isFrozen());
-            freezeButton.setDisable(currentAccount.isFrozen());
-            unfreezeButton.setDisable(!currentAccount.isFrozen());
-        }
-        updateTransactionTableData();
-    }
-
-
-    /**
-     * Sets up the account actions section of the main window, providing buttons and input fields for depositing,
-     * withdrawing, transferring money, opening new accounts, freezing/unfreezing accounts, and closing accounts.
-     * Each action is associated with an event handler that interacts with the MainService to perform the desired operation.
-     */
-    private void setUpAccountActions() {
-        VBox actionsPanel = new VBox(10);
-        Label titleLabel = new Label("Account Actions");
-        actionsPanel.getChildren().add(titleLabel);
+        Label title = new Label("Quick Actions");
+        title.getStyleClass().add("section-title");
 
         GridPane grid = new GridPane();
-        grid.setHgap(10);
-        grid.setVgap(10);
+        grid.setHgap(15);
+        grid.setVgap(15);
 
-        // Deposit
-        grid.add(new Label("1) Deposit money:"), 0, 0);
+        // Deposit / Withdraw
         TextField depositField = new TextField();
-        grid.add(depositField, 1, 0);
+        depositField.setPromptText("Amount to deposit");
         depositButton = new Button("Deposit");
         depositButton.setOnAction(_ -> handleDeposit(depositField));
-        grid.add(depositButton, 2, 0);
 
-        // Withdraw
-        grid.add(new Label("2) Withdraw money:"), 0, 1);
         TextField withdrawField = new TextField();
-        grid.add(withdrawField, 1, 1);
+        withdrawField.setPromptText("Amount to withdraw");
         withdrawButton = new Button("Withdraw");
         withdrawButton.setOnAction(_ -> handleWithdraw(withdrawField));
+
+        grid.add(new Label("Deposit:"), 0, 0);
+        grid.add(depositField, 1, 0);
+        grid.add(depositButton, 2, 0);
+
+        grid.add(new Label("Withdraw:"), 0, 1);
+        grid.add(withdrawField, 1, 1);
         grid.add(withdrawButton, 2, 1);
 
+        grid.add(new Separator(), 0, 2, 3, 1);
+
         // Transfer
-        grid.add(new Label("3) Transfer money"), 0, 2);
-        grid.add(new Label("Account:"), 1, 2);
-        TextField transferAccountField = new TextField();
-        grid.add(transferAccountField, 2, 2);
-
-        grid.add(new Label("Amount:"), 1, 3);
-        TextField transferAmountField = new TextField();
-        grid.add(transferAmountField, 2, 3);
-
-        grid.add(new Label("Comment:"), 1, 4);
-        TextField transferCommentField = new TextField();
-        grid.add(transferCommentField, 2, 4);
+        TextField transferAccField = new TextField();
+        transferAccField.setPromptText("Target Account");
+        TextField transferAmtField = new TextField();
+        transferAmtField.setPromptText("Amount");
+        TextField transferComField = new TextField();
+        transferComField.setPromptText("Comment (optional)");
 
         transferButton = new Button("Transfer");
-        transferButton.setOnAction(_ -> handleTransfer(transferAccountField, transferAmountField, transferCommentField));
-        grid.add(transferButton, 3, 4);
+        transferButton.setOnAction(_ -> handleTransfer(transferAccField, transferAmtField, transferComField));
 
-        // Open Account
-        grid.add(new Label("4) Open new account"), 0, 5, 2, 1);
-        Button openButton = new Button("Open");
+        grid.add(new Label("Transfer to:"), 0, 3);
+        grid.add(transferAccField, 1, 3);
+        grid.add(new Label("Amount:"), 0, 4);
+        grid.add(transferAmtField, 1, 4);
+        grid.add(new Label("Comment:"), 0, 5);
+        grid.add(transferComField, 1, 5);
+        grid.add(transferButton, 2, 5);
+
+        grid.add(new Separator(), 0, 6, 3, 1);
+
+        // Account Management
+        HBox managementBox = new HBox(10);
+        Button openButton = new Button("Open New Account");
         openButton.setOnAction(_ -> handleOpenAccount());
-        grid.add(openButton, 2, 5);
-
-        // Freeze
-        grid.add(new Label("5) Freeze current account"), 0, 6, 2, 1);
         freezeButton = new Button("Freeze");
         freezeButton.setOnAction(_ -> handleFreezeAccount());
-        grid.add(freezeButton, 2, 6);
-
-        // Unfreeze
-        grid.add(new Label("6) Unfreeze account"), 0, 7, 2, 1);
         unfreezeButton = new Button("Unfreeze");
         unfreezeButton.setOnAction(_ -> handleUnfreezeAccount());
-        grid.add(unfreezeButton, 2, 7);
-
-        // Close Account
-        grid.add(new Label("7) Close account"), 0, 8, 2, 1);
-        Button closeButton = new Button("Close");
+        Button closeButton = new Button("Close Account");
+        closeButton.setStyle("-fx-text-fill: red;");
         closeButton.setOnAction(_ -> handleCloseAccount());
-        grid.add(closeButton, 2, 8);
 
-        actionsPanel.getChildren().add(grid);
-        contentPanel.getChildren().add(actionsPanel);
+        managementBox.getChildren().addAll(openButton, freezeButton, unfreezeButton, closeButton);
+        grid.add(managementBox, 0, 7, 3, 1);
+
+        card.getChildren().addAll(title, grid);
+        return card;
     }
 
 
     /**
-     * Handles the deposit action by interacting with the MainService to perform the deposit operation.
-     * It takes the input from the deposit field, processes the deposit, and provides feedback to the user
-     * based on the success or failure of the transaction. If successful, it also refreshes the page to reflect
-     * the updated account balance and transaction history.
+     * Creates the contact manager card, which allows users to manage their contacts for easier transfers.
      *
-     * @param depositField The TextField containing the amount to be deposited.
+     * @return A VBox containing the contact management interface.
      */
-    private void handleDeposit(TextField depositField) {
-        MainService.TransactionResult result = mainService.handleDeposit(depositField.getText());
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            depositField.clear();
-            refreshPage();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the withdraw action by interacting with the MainService to perform the withdrawal operation.
-     * It takes the input from the withdraw field, processes the withdrawal, and provides feedback to the user
-     * based on the success or failure of the transaction. If successful, it also refreshes the page to reflect
-     * the updated account balance and transaction history.
-     *
-     * @param withdrawField The TextField containing the amount to be withdrawn.
-     */
-    private void handleWithdraw(TextField withdrawField) {
-        MainService.TransactionResult result = mainService.handleWithdraw(withdrawField.getText());
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            withdrawField.clear();
-            refreshPage();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the transfer action by interacting with the MainService to perform the transfer operation.
-     * It takes the input from the account, amount, and comment fields, processes the transfer, and provides
-     * feedback to the user based on the success or failure of the transaction. If successful, it also refreshes
-     * the page to reflect the updated account balance and transaction history.
-     *
-     * @param accountField The TextField containing the recipient account number for the transfer.
-     * @param amountField  The TextField containing the amount to be transferred.
-     * @param commentField The TextField containing any comments associated with the transfer.
-     */
-    private void handleTransfer(TextField accountField, TextField amountField, TextField commentField) {
-        MainService.TransactionResult result = mainService.handleTransfer(
-                accountField.getText(), amountField.getText(), commentField.getText());
-
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            accountField.clear();
-            amountField.clear();
-            commentField.clear();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the action of opening a new account by interacting with the MainService to perform the operation.
-     * It processes the request to open a new account and provides feedback to the user based on the success or failure
-     * of the operation. If successful, it also refreshes the account list to include the newly opened account.
-     */
-    private void handleOpenAccount() {
-        MainService.AccountResult result = mainService.handleOpenAccount();
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            handleRefreshAccounts();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the action of freezing the current account by interacting with the MainService to perform the operation.
-     * It processes the request to freeze the account and provides feedback to the user based on the success or failure
-     * of the operation. If successful, it also updates the current account's status to frozen and refreshes the page
-     * to reflect the changes in available actions and transaction history.
-     */
-    private void handleFreezeAccount() {
-        MainService.AccountResult result = mainService.handleFreezeAccount();
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            currentAccount.freeze();
-            refreshPage();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the action of unfreezing the current account by interacting with the MainService to perform the operation.
-     * It processes the request to unfreeze the account and provides feedback to the user based on the success or failure
-     * of the operation. If successful, it also updates the current account's status to active and refreshes the page
-     * to reflect the changes in available actions and transaction history.
-     */
-    private void handleUnfreezeAccount() {
-        MainService.AccountResult result = mainService.handleUnfreezeAccount();
-        if (result.success()) {
-            showSuccessMessage(result.message());
-            currentAccount.unfreeze();
-            refreshPage();
-        } else {
-            showErrorMessage(result.message());
-        }
-    }
-
-
-    /**
-     * Handles the action of closing the current account by interacting with the MainService to perform the operation.
-     * It checks if there are any accounts available to close and confirms the user's intention to close the account.
-     * If it's the last account, it also informs the user that their profile will be deleted. Based on the success or failure
-     * of the operation, it provides feedback to the user and updates the account list and page accordingly.
-     */
-    private void handleCloseAccount() {
-        if (currentUser.getAccounts().isEmpty()) {
-            showErrorMessage("No accounts available to close.");
-            return;
-        }
-
-        boolean isLastAccount = currentUser.getAccounts().size() == 1;
-        String confirmMessage = isLastAccount ?
-                "Are you sure you want to close this account?\nThis will also delete your user profile as it's the last account." :
-                "Are you sure you want to close this account?";
-
-        if (confirmAction(confirmMessage)) {
-            MainService.AccountResult result = mainService.handleCloseAccount();
-            if (result.success()) {
-                showSuccessMessage(result.message());
-                if (isLastAccount) {
-                    close();
-                    MainService.NavigationResult navResult = mainService.navigateToLoginWindow();
-                    if (!navResult.success()) {
-                        showErrorMessage("Error navigating to login: " + navResult.errorMessage());
-                    }
-                } else {
-                    currentUser.getAccounts().remove(currentAccount);
-                    handleRefreshAccounts();
-                }
-            } else {
-                showErrorMessage(result.message());
-            }
-        }
-    }
-
-
-    /**
-     * Sets up the contact manager section of the main window by creating a ContactPanel and adding it to the content panel.
-     * The ContactPanel allows users to manage their contacts, including adding, viewing, and filtering contacts.
-     */
-    private void setUpContactManager() {
+    private VBox createContactManagerCard() {
         ContactPanel contactPanel = new ContactPanel();
-        contentPanel.getChildren().add(contactPanel);
+        contactPanel.getStyleClass().add("card");
+        return contactPanel;
     }
 
 
     /**
-     * Sets up the transactions table in the main window, allowing users to view their transaction history.
-     * The table includes columns for sender, receiver, amount, comment, and date of each transaction.
-     * It also configures the table to automatically resize columns to fit the available space.
+     * Creates the transactions card, which displays the user's transaction history in a table format.
+     *
+     * @return A VBox containing the transaction history table.
      */
-    private void setUpTransactionsTable() {
-        VBox tableContainer = new VBox(10);
-        Label titleLabel = new Label("Transaction History");
-        tableContainer.getChildren().add(titleLabel);
+    private VBox createTransactionsCard() {
+        VBox card = new VBox(15);
+        card.getStyleClass().add("card");
+
+        Label title = new Label("Transaction History");
+        title.getStyleClass().add("section-title");
 
         transactionsTable = new TableView<>();
-        transactionsTable.setPrefHeight(200);
+        transactionsTable.setPrefHeight(250);
 
         TableColumn<Transaction, Integer> senderCol = new TableColumn<>("Sender");
         senderCol.setCellValueFactory(data ->
@@ -485,7 +301,7 @@ public class MainWindow extends Stage {
                 new SimpleIntegerProperty(data.getValue().receiver().getAccountNumber()).asObject()
         );
 
-        TableColumn<Transaction, Double> amountCol = new TableColumn<>("Amount");
+        TableColumn<Transaction, Double> amountCol = new TableColumn<>("Amount (Ft)");
         amountCol.setCellValueFactory(data ->
                 new SimpleDoubleProperty(data.getValue().amount()).asObject()
         );
@@ -496,82 +312,239 @@ public class MainWindow extends Stage {
         );
 
         TableColumn<Transaction, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(data -> {
-            String formattedDate = data.getValue().date().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            return new SimpleStringProperty(formattedDate);
-        });
+        dateCol.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().date().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
+        );
 
         transactionsTable.getColumns().addAll(senderCol, receiverCol, amountCol, commentCol, dateCol);
         transactionsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
 
-        tableContainer.getChildren().add(transactionsTable);
-        contentPanel.getChildren().add(tableContainer);
+        card.getChildren().addAll(title, transactionsTable);
+        return card;
     }
 
 
     /**
-     * Updates the transaction table data by fetching the latest transactions from the MainService.
-     * If the transaction retrieval is successful, it updates the current account's transactions and refreshes the table view.
-     * If there is an error during the retrieval process, an error message is displayed to the user.
+     * Updates the account selector dropdown with the current user's accounts and selects the current account if available.
+     * This method is called after refreshing the accounts to ensure the dropdown reflects any changes.
+     */
+    private void updateAccountSelectorDropdown() {
+        ObservableList<Integer> accountNums = FXCollections.observableArrayList();
+        for (Account acc : currentUser.getAccounts())
+            accountNums.add(acc.getAccountNumber());
+
+        accountSelector.setItems(accountNums);
+
+        if (currentAccount != null)
+            accountSelector.setValue(currentAccount.getAccountNumber());
+    }
+
+
+    /**
+     * Handles the action of refreshing the user's accounts. It retrieves the latest account information from the service,
+     * updates the current user's account list, and refreshes the UI to reflect any changes.
+     */
+    private void handleRefreshAccounts() {
+        MainService.AccountListResult accountsResult = mainService.getUserAccounts();
+        if (accountsResult.success()) {
+            currentUser.clearAccounts();
+            currentUser.addAllAccounts(accountsResult.accounts());
+            updateAccountSelectorDropdown();
+            refreshPage();
+        } else { showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage()); }
+    }
+
+
+    /**
+     * Refreshes the main window page by updating the account balance display,
+     * enabling or disabling action buttons based on account status, and updating
+     * the transaction history table with the latest transactions for the current account.
+     */
+    private void refreshPage() {
+        if (currentAccount != null) {
+            balanceLabel.setText(String.format("%,.2f Ft", currentAccount.getBalance()));
+            depositButton.setDisable(currentAccount.isFrozen());
+            withdrawButton.setDisable(currentAccount.isFrozen());
+            transferButton.setDisable(currentAccount.isFrozen());
+            freezeButton.setDisable(currentAccount.isFrozen());
+            unfreezeButton.setDisable(!currentAccount.isFrozen());
+        }
+        updateTransactionTableData();
+    }
+
+
+    /**
+     * Updates the transaction history table with the latest transactions for the current account.
+     * It retrieves the transactions from the service, updates the current account's transaction list,
+     * and populates the table with the new data. If there is an error retrieving the transactions,
+     * an error message is displayed to the user.
      */
     private void updateTransactionTableData() {
         if (currentAccount == null) return;
-
         MainService.TransactionListResult transactionsResult = mainService.getTransactions();
-
         if (transactionsResult.success()) {
             List<Transaction> transactions = transactionsResult.transactions();
             currentAccount.setTransactions(transactions);
-
-            ObservableList<Transaction> observableTransactions = FXCollections.observableArrayList(transactions);
-            transactionsTable.setItems(observableTransactions);
-        } else {
-            showErrorMessage("Error updating transactions: " + transactionsResult.errorMessage());
-        }
+            transactionsTable.setItems(FXCollections.observableArrayList(transactions));
+        } else { showErrorMessage("Error updating transactions: " + transactionsResult.errorMessage()); }
     }
 
 
     /**
-     * Displays an error message in an alert dialog with the specified message.
+     * Handles the action of depositing funds into the current account. It retrieves the deposit amount from the provided text field,
+     * calls the service to perform the deposit, and updates the UI based on the result. If the deposit is successful, the text field is cleared and the page is refreshed.
+     * If there is an error during the deposit, an error message is displayed to the user.
      *
-     * @param message The error message to be displayed in the alert dialog.
+     * @param depositField The TextField from which to retrieve the deposit amount.
      */
-    private void showErrorMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Error");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void handleDeposit(TextField depositField) {
+        MainService.TransactionResult result = mainService.handleDeposit(depositField.getText());
+        if (result.success()) {
+            depositField.clear();
+            refreshPage();
+        } else showErrorMessage(result.message());
     }
 
 
     /**
-     * Displays a success message in an alert dialog with the specified message.
+     * Handles the action of withdrawing funds from the current account. It retrieves the withdrawal amount from the provided text field,
+     * calls the service to perform the withdrawal, and updates the UI based on the result. If the withdrawal is successful, the text field is cleared and the page is refreshed.
+     * If there is an error during the withdrawal, an error message is displayed to the user.
      *
-     * @param message The success message to be displayed in the alert dialog.
+     * @param withdrawField The TextField from which to retrieve the withdrawal amount.
      */
-    private void showSuccessMessage(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Success");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void handleWithdraw(TextField withdrawField) {
+        MainService.TransactionResult result = mainService.handleWithdraw(withdrawField.getText());
+        if (result.success()) {
+            withdrawField.clear();
+            refreshPage();
+        } else showErrorMessage(result.message());
+    }
+
+
+    /**
+     * Handles the action of transferring funds from the current account to another account. It retrieves the target account number, transfer amount, and optional comment from the provided text fields,
+     * calls the service to perform the transfer, and updates the UI based on the result. If the transfer is successful, all text fields are cleared and the page is refreshed.
+     * If there is an error during the transfer, an error message is displayed to the user.
+     *
+     * @param accountField The TextField from which to retrieve the target account number for the transfer.
+     * @param amountField The TextField from which to retrieve the transfer amount.
+     * @param commentField The TextField from which to retrieve any optional comment for the transfer.
+     */
+    private void handleTransfer(TextField accountField, TextField amountField, TextField commentField) {
+        MainService.TransactionResult result = mainService.handleTransfer(accountField.getText(), amountField.getText(), commentField.getText());
+        if (result.success()) {
+            showSuccessMessage(result.message());
+            accountField.clear();
+            amountField.clear();
+            commentField.clear();
+        } else showErrorMessage(result.message());
         refreshPage();
     }
 
 
     /**
-     * Displays a confirmation dialog with the specified message and returns true if the user confirms the action.
+     * Handles the action of opening a new account for the current user. It calls the service to perform the account opening,
+     * and updates the UI based on the result. If the account is opened successfully, a success message is displayed and the accounts are refreshed.
+     * If there is an error during the account opening, an error message is displayed to the user.
+     */
+    private void handleOpenAccount() {
+        MainService.AccountResult result = mainService.handleOpenAccount();
+        if (result.success()) {
+            showSuccessMessage(result.message());
+            handleRefreshAccounts();
+        } else showErrorMessage(result.message());
+    }
+
+
+    /**
+     * Handles the action of freezing the current account. It calls the service to perform the account freezing,
+     * and updates the UI based on the result. If the account is frozen successfully, a success message is displayed and the page is refreshed.
+     * If there is an error during the account freezing, an error message is displayed to the user.
+     */
+    private void handleFreezeAccount() {
+        MainService.AccountResult result = mainService.handleFreezeAccount();
+        if (result.success()) {
+            currentAccount.freeze();
+            refreshPage();
+        } else showErrorMessage(result.message());
+    }
+
+
+    /**
+     * Handles the action of unfreezing the current account. It calls the service to perform the account unfreezing,
+     * and updates the UI based on the result. If the account is unfrozen successfully, a success message is displayed and the page is refreshed.
+     * If there is an error during the account unfreezing, an error message is displayed to the user.
+     */
+    private void handleUnfreezeAccount() {
+        MainService.AccountResult result = mainService.handleUnfreezeAccount();
+        if (result.success()) {
+            currentAccount.unfreeze();
+            refreshPage();
+        } else showErrorMessage(result.message());
+    }
+
+
+    /**
+     * Handles the action of closing the current account. It checks if the current account is the last one for the user and prompts for confirmation accordingly.
+     * If the user confirms, it calls the service to perform the account closure, and updates the UI based on the result. If the account is closed successfully,
+     * a success message is displayed, and if it was the last account, the user is logged out. If there is an error during the account closure, an error message is displayed to the user.
+     */
+    private void handleCloseAccount() {
+        if (currentUser.getAccounts().isEmpty())
+            return;
+
+        boolean isLastAccount = currentUser.getAccounts().size() == 1;
+        String confirmMessage = isLastAccount
+                        ? "Are you sure? This deletes your user profile as well."
+                        : "Are you sure you want to close this account?";
+
+        if (confirmAction(confirmMessage)) {
+            MainService.AccountResult result = mainService.handleCloseAccount();
+            if (result.success()) {
+                if (isLastAccount) {
+                    close();
+                    mainService.navigateToLoginWindow();
+                } else {
+                    currentUser.getAccounts().remove(currentAccount);
+                    handleRefreshAccounts();
+                }
+            } else { showErrorMessage(result.message()); }
+        }
+    }
+
+
+    /**
+     * Displays an error message to the user in an alert dialog.
+     *
+     * @param message The error message to be displayed.
+     */
+    private void showErrorMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
+    }
+
+
+    /**
+     * Displays a success message to the user in an alert dialog.
+     *
+     * @param message The success message to be displayed.
+     */
+    private void showSuccessMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null); alert.setContentText(message); alert.showAndWait();
+    }
+
+
+    /**
+     * Displays a confirmation dialog to the user with the given message and returns true if the user confirms the action.
      *
      * @param message The confirmation message to be displayed in the dialog.
-     * @return true if the user clicks "OK" to confirm the action, false otherwise.
+     * @return true if the user clicks "OK", false otherwise.
      */
     private boolean confirmAction(String message) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Confirm Action");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-
+        alert.setHeaderText(null); alert.setContentText(message);
         Optional<ButtonType> result = alert.showAndWait();
         return result.isPresent() && result.get() == ButtonType.OK;
     }

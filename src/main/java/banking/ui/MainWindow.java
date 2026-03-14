@@ -1,5 +1,6 @@
 package banking.ui;
 
+import banking.data.DatabaseManager;
 import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;
@@ -133,7 +134,14 @@ public class MainWindow extends Stage {
         });
 
         MenuItem exitItem = new MenuItem("Exit");
-        exitItem.setOnAction(_ -> System.exit(0));
+        exitItem.setOnAction(_ -> {
+            try {
+                DatabaseManager.getInstance().closeConnection();
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            System.exit(0);
+        });
 
         fileMenu.getItems().addAll(logOutItem, new SeparatorMenuItem(), exitItem);
         menuBar.getMenus().add(fileMenu);
@@ -434,7 +442,7 @@ public class MainWindow extends Stage {
      * @param depositField The TextField from which to retrieve the deposit amount.
      */
     private void handleDeposit(TextField depositField) {
-        MainService.TransactionResult result = mainService.handleDeposit(depositField.getText());
+        MainService.TransactionResult result = mainService.deposit(depositField.getText());
         if (result.success()) {
             depositField.clear();
             refreshPage();
@@ -450,7 +458,7 @@ public class MainWindow extends Stage {
      * @param withdrawField The TextField from which to retrieve the withdrawal amount.
      */
     private void handleWithdraw(TextField withdrawField) {
-        MainService.TransactionResult result = mainService.handleWithdraw(withdrawField.getText());
+        MainService.TransactionResult result = mainService.withdraw(withdrawField.getText());
         if (result.success()) {
             withdrawField.clear();
             refreshPage();
@@ -468,7 +476,7 @@ public class MainWindow extends Stage {
      * @param commentField The TextField from which to retrieve any optional comment for the transfer.
      */
     private void handleTransfer(TextField accountField, TextField amountField, TextField commentField) {
-        MainService.TransactionResult result = mainService.handleTransfer(accountField.getText(), amountField.getText(), commentField.getText());
+        MainService.TransactionResult result = mainService.transfer(accountField.getText(), amountField.getText(), commentField.getText());
         if (result.success()) {
             showSuccessMessage(result.message());
             accountField.clear();
@@ -485,7 +493,7 @@ public class MainWindow extends Stage {
      * If there is an error during the account opening, an error message is displayed to the user.
      */
     private void handleOpenAccount() {
-        MainService.AccountResult result = mainService.handleOpenAccount();
+        MainService.AccountResult result = mainService.openAccount();
         if (result.success()) {
             showSuccessMessage(result.message());
             handleRefreshAccounts();
@@ -499,7 +507,7 @@ public class MainWindow extends Stage {
      * If there is an error during the account freezing, an error message is displayed to the user.
      */
     private void handleFreezeAccount() {
-        MainService.AccountResult result = mainService.handleFreezeAccount();
+        MainService.AccountResult result = mainService.freezeAccount();
         if (result.success())
             refreshPage();
         else showErrorMessage(result.message());
@@ -507,12 +515,12 @@ public class MainWindow extends Stage {
 
 
     /**
-     * Handles the action of unfreezing the current account. It calls the service to perform the account unfreezing,
+     * Handles the action of unfreezing the current accounta. It calls the service to perform the account unfreezing,
      * and updates the UI based on the result. If the account is unfrozen successfully, a success message is displayed and the page is refreshed.
      * If there is an error during the account unfreezing, an error message is displayed to the user.
      */
     private void handleUnfreezeAccount() {
-        MainService.AccountResult result = mainService.handleUnfreezeAccount();
+        MainService.AccountResult result = mainService.unfreezeAccount();
         if (result.success()) {
             refreshPage();
         } else showErrorMessage(result.message());
@@ -534,7 +542,7 @@ public class MainWindow extends Stage {
                 : "Are you sure you want to close this account?";
 
         if (confirmAction(confirmMessage)) {
-            MainService.AccountResult result = mainService.handleCloseAccount();
+            MainService.AccountResult result = mainService.closeAccount(isLastAccount);
             if (result.success()) {
                 if (isLastAccount) {
                     close();

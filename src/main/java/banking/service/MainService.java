@@ -22,6 +22,7 @@ public class MainService {
 
     private final AccountManager accountManager;
     private final TransactionManager transactionManager;
+    private final UserManager userManager;
 
     private final User currentUser;
     private Account selectedAccount;
@@ -37,6 +38,7 @@ public class MainService {
         UserManager userManager = new UserManager();
         this.accountManager = new AccountManager();
         this.transactionManager = new TransactionManager();
+        this.userManager = new UserManager();
         this.currentUser = userManager.loadUser(userEmail);
     }
 
@@ -136,7 +138,7 @@ public class MainService {
      * @param amountText the amount to deposit as a string
      * @return TransactionResult indicating success or failure with message
      */
-    public TransactionResult handleDeposit(String amountText) {
+    public TransactionResult deposit(String amountText) {
         // Validate account selection
         ValidationResult accountValidation = validateAccountSelected();
         if (!accountValidation.success())
@@ -164,7 +166,7 @@ public class MainService {
      * @param amountText the amount to withdraw as a string
      * @return TransactionResult indicating success or failure with message
      */
-    public TransactionResult handleWithdraw(String amountText) {
+    public TransactionResult withdraw(String amountText) {
         // Validate account selection
         ValidationResult accountValidation = validateAccountSelected();
         if (!accountValidation.success())
@@ -199,7 +201,7 @@ public class MainService {
      * @param comment           optional comment for the transfer.
      * @return a TransactionResult indicating success or failure with message.
      */
-    public TransactionResult handleTransfer(String accountNumberText, String amountText, String comment) {
+    public TransactionResult transfer(String accountNumberText, String amountText, String comment) {
         // Validate account selection
         ValidationResult accountValidation = validateAccountSelected();
         if (!accountValidation.success())
@@ -256,7 +258,7 @@ public class MainService {
 
 
     /// Handles opening a new account
-    public AccountResult handleOpenAccount() {
+    public AccountResult openAccount() {
         try {
             // Generate unique account number
             Random rand = new Random();
@@ -266,9 +268,13 @@ public class MainService {
             } while (accountManager.accountExists(accountNumber));
 
             Account newAccount = new Account(0, currentUser.getUserID(), accountNumber, 0.0, false);
-            accountManager.saveAccount(newAccount);
-            return new AccountResult(true, "Account created successfully! Account number: " + accountNumber);
 
+            boolean saved = accountManager.saveAccount(newAccount);
+            if (saved) {
+                return new AccountResult(true, "Account created successfully! Account number: " + accountNumber);
+            } else {
+                return new AccountResult(false, "Failed to create account: Account already exists.");
+            }
         } catch (SQLException ex) {
             return new AccountResult(false, "Failed to create account: " + ex.getMessage());
         }
@@ -276,7 +282,7 @@ public class MainService {
 
 
     /// Handles freezing an account
-    public AccountResult handleFreezeAccount() {
+    public AccountResult freezeAccount() {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
 
@@ -291,7 +297,7 @@ public class MainService {
 
 
     /// Handles unfreezing an account
-    public AccountResult handleUnfreezeAccount() {
+    public AccountResult unfreezeAccount() {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
 
@@ -306,7 +312,7 @@ public class MainService {
 
 
     /// Handles closing an account
-    public AccountResult handleCloseAccount() {
+    public AccountResult closeAccount(boolean isLastAccount) {
         if (selectedAccount == null)
             return new AccountResult(false, "No account selected.");
 
@@ -316,6 +322,10 @@ public class MainService {
                         "Please withdraw all funds first.");
 
             accountManager.deleteAccount(selectedAccount);
+
+            if (isLastAccount)
+                userManager.deleteUser(currentUser.getEmail());
+
             return new AccountResult(true, "Account closed successfully!");
         } catch (SQLException ex) {
             return new AccountResult(false, "Failed to close account: " + ex.getMessage());
@@ -330,6 +340,7 @@ public class MainService {
 
         try {
             List<Transaction> transactions = transactionManager.loadTransactions(selectedAccount);
+            selectedAccount.setTransactions(transactions);
             return new TransactionListResult(true, null, transactions);
         } catch (SQLException ex) {
             return new TransactionListResult(false, "Failed to load transactions: " + ex.getMessage(), null);

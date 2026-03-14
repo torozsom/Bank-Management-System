@@ -10,17 +10,17 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 20, 0, 0, 10);
 }
 
-.title-label {
-    -fx-font-size: 30px;
-    -fx-font-weight: bold;
-    -fx-text-fill: black;
-    -fx-padding: 0 0 40 0;
-}
-
 .label {
     -fx-font-size: 15px;
     -fx-text-fill: black;
     -fx-font-weight: bold;
+}
+
+.title-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: black;
+    -fx-padding: 0 0 40 0;
 }
 
 .text-field, .password-field {

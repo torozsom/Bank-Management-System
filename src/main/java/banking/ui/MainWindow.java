@@ -200,7 +200,7 @@ public class MainWindow extends Stage {
     private VBox createAccountActionsCard() {
         VBox card = new VBox(15);
         card.getStyleClass().add("card");
-        card.setAlignment(Pos.CENTER);
+        card.setAlignment(Pos.TOP_CENTER);
 
         Label title = new Label("Quick Actions");
         title.getStyleClass().add("section-title");

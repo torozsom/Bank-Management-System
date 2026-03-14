@@ -9,18 +9,18 @@
     -fx-effect: dropshadow(three-pass-box, rgba(0, 0, 0, 0.2), 20, 0.5, 0, 5);
 }
 
+.label {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #495057;
+}
+
 .section-title {
     -fx-font-size: 22px;
     -fx-font-weight: bold;
     -fx-text-fill: #343a40;
     -fx-padding: 0 0 15 0;
     -fx-alignment: center;
-}
-
-.label {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #495057;
 }
 
 .balance-label {
@@ -122,5 +122,5 @@
 
 .table-row-cell { -fx-cell-size: 35px; }
 .table-row-cell:odd { -fx-background-color: #fcfcfc; }
-.table-row-cell:even { -fx-background-color: #ffffff; }
+.table-row-cell:even { -fx-background-color: #e3e2e2; }
 .table-row-cell:hover { -fx-background-color: #f1f3f5; }

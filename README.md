@@ -12,7 +12,7 @@ A comprehensive **Java-based Bank Management System** featuring modern architect
 
 ---
 
-# 🖼️ Screenshots
+## 🖼️ Screenshots
 
 <p align="center">
   <img src="assets/main-window1.png" width="700">

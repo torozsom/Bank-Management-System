@@ -4,12 +4,24 @@ import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;
 import banking.service.MainService;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
-import javax.swing.*;
-import java.awt.*;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Optional;
 
 
 /**
@@ -17,35 +29,30 @@ import java.util.List;
  * It allows users to manage their accounts, perform transactions,
  * and view their transaction history.
  */
-public class MainWindow extends JFrame {
+public class MainWindow extends Stage {
 
-    // UI Constants
-    private static final Font TITLE_FONT = new Font("Times New Roman", Font.BOLD, 20);
-    private static final Font SECTION_FONT = new Font("Times New Roman", Font.BOLD, 17);
-    private static final Font BUTTON_FONT = new Font("Times New Roman", Font.BOLD, 14);
-    private static final Font LABEL_FONT = new Font("Arial", Font.BOLD, 14);
-
-    private static final Dimension BUTTON_SIZE = new Dimension(100, 30);
-    private static final Dimension TEXT_FIELD_SIZE = new Dimension(150, 25);
-    private static final Insets DEFAULT_INSETS = new Insets(5, 5, 5, 5);
-
-
-    private final JPanel contentPanel;
     private final MainService mainService;
     private final User currentUser;
-
-    private JComboBox<Integer> accountSelector;
-    private JLabel balanceLabel;
-    private JButton depositButton;
-    private JButton withdrawButton;
-    private JButton transferButton;
-    private JButton freezeButton;
-    private JButton unfreezeButton;
     private Account currentAccount;
 
+    private final VBox contentPanel;
+    private ComboBox<Integer> accountSelector;
+    private Label balanceLabel;
+    private Button depositButton;
+    private Button withdrawButton;
+    private Button transferButton;
+    private Button freezeButton;
+    private Button unfreezeButton;
+    private TableView<Transaction> transactionsTable;
 
-    /// Creates and shows the main window
-    /// of the app with the email as title
+
+    /**
+     * Constructs the main window for the banking application, initializing
+     * the user interface and loading the user's accounts and transactions.
+     *
+     * @param email The email of the currently logged-in user, used to load their accounts and transactions.
+     * @throws SQLException if there is an error loading the user's accounts or transactions from the database.
+     */
     public MainWindow(String email) throws SQLException {
         mainService = new MainService(email);
         currentUser = mainService.getCurrentUser();
@@ -63,105 +70,77 @@ public class MainWindow extends JFrame {
         }
 
         setTitle(email);
-        setSize(900, 600);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
-        Image icon = Toolkit.getDefaultToolkit().getImage("icon.png");
-        setIconImage(icon);
 
-        createMenuBar();
-        contentPanel = new JPanel();
-        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        VBox root = new VBox();
+        root.getChildren().add(createMenuBar());
+
+        contentPanel = new VBox();
+        contentPanel.setSpacing(20);
+        contentPanel.setPadding(new Insets(20));
 
         setUpAccountChooser();
         setUpAccountActions();
         setUpContactManager();
-        transactionsTable();
+        setUpTransactionsTable();
 
-        JScrollPane scrollPane = new JScrollPane(contentPanel);
-        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
-        JScrollBar verticalScrollBar = scrollPane.getVerticalScrollBar();
-        verticalScrollBar.setUnitIncrement(10);
-        setContentPane(scrollPane);
+        ScrollPane scrollPane = new ScrollPane(contentPanel);
+        scrollPane.setFitToWidth(true);
 
+        root.getChildren().add(scrollPane);
+
+        Scene scene = new Scene(root, 900, 600);
+        setScene(scene);
         refreshPage();
-        setVisible(true);
+        show();
     }
 
 
-    /// Creates a menu bar with the following options:
-    /// file, view, settings.
-    private void createMenuBar() {
-        JMenuBar menuBar = new JMenuBar();
-        JMenu fileMenu = new JMenu("File");
-        JMenuItem exitItem = new JMenuItem("Exit");
-        exitItem.addActionListener(_ -> System.exit(0));
-        fileMenu.add(exitItem);
-        JMenuItem logOutItem = new JMenuItem("Log Out");
+    /**
+     * Creates the menu bar for the main window, including options for logging out and exiting the application.
+     *
+     * @return A MenuBar object containing the menu items for the main window.
+     */
+    private MenuBar createMenuBar() {
+        MenuBar menuBar = new MenuBar();
+        Menu fileMenu = new Menu("File");
 
-        //Logs out when clicked and gets back to the login window
-        logOutItem.addActionListener(_ -> {
-            dispose();
+        MenuItem exitItem = new MenuItem("Exit");
+        exitItem.setOnAction(_ -> System.exit(0));
+
+        MenuItem logOutItem = new MenuItem("Log Out");
+        logOutItem.setOnAction(_ -> {
+            close();
             try {
                 new LoginWindow();
             } catch (SQLException ex) {
                 throw new RuntimeException(ex);
             }
         });
-        fileMenu.add(logOutItem);
 
-        menuBar.add(fileMenu);
-        setJMenuBar(menuBar);
+        fileMenu.getItems().addAll(logOutItem, exitItem);
+        menuBar.getMenus().add(fileMenu);
+        return menuBar;
     }
 
 
-    /// Creates the refresh button and its action listener
-    private JButton getRefreshButton() {
-        JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(_ -> {
-            try {
-                // Refresh the accounts from ViewModel
-                MainService.AccountListResult accountsResult = mainService.getUserAccounts();
-                if (accountsResult.success()) {
-                    currentUser.clearAccounts();
-                    currentUser.addAllAccounts(accountsResult.accounts());
-                    updateAccountSelector();
-                    refreshPage();
-                } else {
-                    showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
-                }
-            } catch (SQLException ex) {
-                showErrorMessage("Error refreshing accounts: " + ex.getMessage());
-            }
-        });
-        return refreshButton;
-    }
-
-
-    /// Introduces the account chooser and the balance contents
+    /**
+     * Sets up the account chooser section of the main window, allowing users to select from their available accounts,
+     * view their balance, and refresh the account list.
+     */
     private void setUpAccountChooser() {
-        JPanel accountChooserPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        HBox accountChooserPanel = new HBox(10);
+        accountChooserPanel.setAlignment(Pos.CENTER);
 
-        JLabel chooseLabel = new JLabel("Choose account:");
-        chooseLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
-        accountChooserPanel.add(chooseLabel);
+        Label chooseLabel = new Label("Choose account:");
 
-        List<Account> accounts = currentUser.getAccounts();
-        Integer[] accountNums = new Integer[accounts.size()];
-        for (int i = 0; i < accountNums.length; i++)
-            accountNums[i] = accounts.get(i).getAccountNumber();
+        accountSelector = new ComboBox<>();
+        updateAccountSelectorDropdown();
 
-        accountSelector = new JComboBox<>(accountNums);
-        accountSelector.setPreferredSize(new Dimension(150, 30));
-        accountSelector.setFont(new Font("Times New Roman", Font.BOLD, 16));
-        accountSelector.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
+        accountSelector.setOnAction(_ -> {
+            Integer selectedAccountNumber = accountSelector.getValue();
+            if (selectedAccountNumber == null) return;
 
-        accountSelector.addActionListener(_ -> {
-            Integer selectedAccountNumber = (Integer) accountSelector.getSelectedItem();
-            if (selectedAccountNumber == null)
-                return;
-            // Find the account from the user's accounts list
             for (Account account : currentUser.getAccounts()) {
                 if (account.getAccountNumber() == selectedAccountNumber) {
                     currentAccount = account;
@@ -172,113 +151,162 @@ public class MainWindow extends JFrame {
             }
         });
 
+        Button refreshButton = new Button("Refresh");
+        refreshButton.setOnAction(_ -> handleRefreshAccounts());
 
-        accountChooserPanel.add(accountSelector);
+        accountChooserPanel.getChildren().addAll(chooseLabel, accountSelector, refreshButton);
 
-        JButton refreshButton = getRefreshButton();
+        balanceLabel = new Label();
+        HBox balancePanel = new HBox(balanceLabel);
+        balancePanel.setAlignment(Pos.CENTER);
 
-        accountChooserPanel.add(refreshButton);
-        accountChooserPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        contentPanel.add(accountChooserPanel);
-
-        JPanel balancePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        balanceLabel = new JLabel("Balance: " + currentAccount.getBalance() + " Ft");
-        balanceLabel.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        balancePanel.add(balanceLabel);
-        balancePanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 70, 20));
-
-        contentPanel.add(balancePanel);
+        contentPanel.getChildren().addAll(accountChooserPanel, balancePanel);
     }
 
 
-    /// Real-time update of data on the UI
+    /**
+     * Handles the action of refreshing the user's account list, updating the
+     * account selector dropdown and refreshing the page to reflect any changes.
+     * If there is an error during the refresh process, an error message is displayed to the user.
+     */
+    private void handleRefreshAccounts() {
+        MainService.AccountListResult accountsResult = mainService.getUserAccounts();
+        if (accountsResult.success()) {
+            currentUser.clearAccounts();
+            currentUser.addAllAccounts(accountsResult.accounts());
+            updateAccountSelectorDropdown();
+            refreshPage();
+        } else {
+            showErrorMessage("Failed to refresh accounts: " + accountsResult.errorMessage());
+        }
+    }
+
+
+    /**
+     * Updates the account selector dropdown with the current user's accounts,
+     * ensuring that the currently selected account is displayed if it exists.
+     */
+    private void updateAccountSelectorDropdown() {
+        ObservableList<Integer> accountNums = FXCollections.observableArrayList();
+        for (Account acc : currentUser.getAccounts()) {
+            accountNums.add(acc.getAccountNumber());
+        }
+        accountSelector.setItems(accountNums);
+        if (currentAccount != null) {
+            accountSelector.setValue(currentAccount.getAccountNumber());
+        }
+    }
+
+
+    /**
+     * Refreshes the main window page, updating the balance label and enabling or disabling action buttons
+     * based on the current account's status (e.g., frozen or active). It also updates the transaction table data
+     * to reflect any recent transactions associated with the current account.
+     */
     private void refreshPage() {
         if (currentAccount != null) {
             balanceLabel.setText("Balance: " + currentAccount.getBalance() + " Ft");
 
-            depositButton.setEnabled(!currentAccount.isFrozen());
-            withdrawButton.setEnabled(!currentAccount.isFrozen());
-            transferButton.setEnabled(!currentAccount.isFrozen());
-            freezeButton.setEnabled(!currentAccount.isFrozen());
-            unfreezeButton.setEnabled(currentAccount.isFrozen());
+            depositButton.setDisable(currentAccount.isFrozen());
+            withdrawButton.setDisable(currentAccount.isFrozen());
+            transferButton.setDisable(currentAccount.isFrozen());
+            freezeButton.setDisable(currentAccount.isFrozen());
+            unfreezeButton.setDisable(!currentAccount.isFrozen());
         }
-
-        updateTransactionTable();
-        repaint();
-        revalidate();
+        updateTransactionTableData();
     }
 
 
-    /// Creates the grid layout and its account action contents
+    /**
+     * Sets up the account actions section of the main window, providing buttons and input fields for depositing,
+     * withdrawing, transferring money, opening new accounts, freezing/unfreezing accounts, and closing accounts.
+     * Each action is associated with an event handler that interacts with the MainService to perform the desired operation.
+     */
     private void setUpAccountActions() {
-        JPanel actionsPanel = createActionsPanel();
-        addSectionTitle(actionsPanel);
+        VBox actionsPanel = new VBox(10);
+        Label titleLabel = new Label("Account Actions");
+        actionsPanel.getChildren().add(titleLabel);
 
-        GridBagConstraints gbc = createDefaultConstraints();
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
 
-        addDepositSection(actionsPanel, gbc);
-        addWithdrawSection(actionsPanel, gbc);
-        addTransferSection(actionsPanel, gbc);
-        addAccountManagementSection(actionsPanel, gbc);
+        // Deposit
+        grid.add(new Label("1) Deposit money:"), 0, 0);
+        TextField depositField = new TextField();
+        grid.add(depositField, 1, 0);
+        depositButton = new Button("Deposit");
+        depositButton.setOnAction(_ -> handleDeposit(depositField));
+        grid.add(depositButton, 2, 0);
 
-        contentPanel.add(actionsPanel);
+        // Withdraw
+        grid.add(new Label("2) Withdraw money:"), 0, 1);
+        TextField withdrawField = new TextField();
+        grid.add(withdrawField, 1, 1);
+        withdrawButton = new Button("Withdraw");
+        withdrawButton.setOnAction(_ -> handleWithdraw(withdrawField));
+        grid.add(withdrawButton, 2, 1);
+
+        // Transfer
+        grid.add(new Label("3) Transfer money"), 0, 2);
+        grid.add(new Label("Account:"), 1, 2);
+        TextField transferAccountField = new TextField();
+        grid.add(transferAccountField, 2, 2);
+
+        grid.add(new Label("Amount:"), 1, 3);
+        TextField transferAmountField = new TextField();
+        grid.add(transferAmountField, 2, 3);
+
+        grid.add(new Label("Comment:"), 1, 4);
+        TextField transferCommentField = new TextField();
+        grid.add(transferCommentField, 2, 4);
+
+        transferButton = new Button("Transfer");
+        transferButton.setOnAction(_ -> handleTransfer(transferAccountField, transferAmountField, transferCommentField));
+        grid.add(transferButton, 3, 4);
+
+        // Open Account
+        grid.add(new Label("4) Open new account"), 0, 5, 2, 1);
+        Button openButton = new Button("Open");
+        openButton.setOnAction(_ -> handleOpenAccount());
+        grid.add(openButton, 2, 5);
+
+        // Freeze
+        grid.add(new Label("5) Freeze current account"), 0, 6, 2, 1);
+        freezeButton = new Button("Freeze");
+        freezeButton.setOnAction(_ -> handleFreezeAccount());
+        grid.add(freezeButton, 2, 6);
+
+        // Unfreeze
+        grid.add(new Label("6) Unfreeze account"), 0, 7, 2, 1);
+        unfreezeButton = new Button("Unfreeze");
+        unfreezeButton.setOnAction(_ -> handleUnfreezeAccount());
+        grid.add(unfreezeButton, 2, 7);
+
+        // Close Account
+        grid.add(new Label("7) Close account"), 0, 8, 2, 1);
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(_ -> handleCloseAccount());
+        grid.add(closeButton, 2, 8);
+
+        actionsPanel.getChildren().add(grid);
+        contentPanel.getChildren().add(actionsPanel);
     }
 
 
-    /// Creates the actions panel with a grid layout
-    private JPanel createActionsPanel() {
-        return new JPanel(new GridBagLayout());
-    }
-
-
-    /// Adds a title to the account actions section
-    private void addSectionTitle(JPanel ignoredActionsPanel) {
-        JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JLabel accountActionsLabel = new JLabel("Account Actions");
-        accountActionsLabel.setFont(TITLE_FONT);
-        accountActionsLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 30, 0));
-        titlePanel.add(accountActionsLabel);
-        contentPanel.add(titlePanel);
-    }
-
-
-    /// Creates default constraints for the grid layout
-    private GridBagConstraints createDefaultConstraints() {
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = DEFAULT_INSETS;
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridwidth = 1;
-        gbc.gridy = 0;
-        return gbc;
-    }
-
-
-    /// Adds sections for deposit, withdraw, transfer, and account management
-    private void addDepositSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        JLabel depositLabel = createSectionLabel("1) Deposit money:");
-        panel.add(depositLabel, gbc);
-
-        gbc.gridx = 1;
-        JTextField depositField = createTextField();
-        panel.add(depositField, gbc);
-
-        gbc.gridx = 2;
-        depositButton = createButton("Deposit");
-        depositButton.addActionListener(_ -> handleDeposit(depositField));
-        panel.add(depositButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Handles the deposit action
-    private void handleDeposit(JTextField depositField) {
+    /**
+     * Handles the deposit action by interacting with the MainService to perform the deposit operation.
+     * It takes the input from the deposit field, processes the deposit, and provides feedback to the user
+     * based on the success or failure of the transaction. If successful, it also refreshes the page to reflect
+     * the updated account balance and transaction history.
+     *
+     * @param depositField The TextField containing the amount to be deposited.
+     */
+    private void handleDeposit(TextField depositField) {
         MainService.TransactionResult result = mainService.handleDeposit(depositField.getText());
         if (result.success()) {
             showSuccessMessage(result.message());
-            depositField.setText("");
+            depositField.clear();
             refreshPage();
         } else {
             showErrorMessage(result.message());
@@ -286,31 +314,19 @@ public class MainWindow extends JFrame {
     }
 
 
-    /// Adds the withdraw section to the actions panel
-    private void addWithdrawSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        JLabel withdrawLabel = createSectionLabel("2) Withdraw money:");
-        panel.add(withdrawLabel, gbc);
-
-        gbc.gridx = 1;
-        JTextField withdrawField = createTextField();
-        panel.add(withdrawField, gbc);
-
-        gbc.gridx = 2;
-        withdrawButton = createButton("Withdraw");
-        withdrawButton.addActionListener(_ -> handleWithdraw(withdrawField));
-        panel.add(withdrawButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Handles the withdraw action
-    private void handleWithdraw(JTextField withdrawField) {
+    /**
+     * Handles the withdraw action by interacting with the MainService to perform the withdrawal operation.
+     * It takes the input from the withdraw field, processes the withdrawal, and provides feedback to the user
+     * based on the success or failure of the transaction. If successful, it also refreshes the page to reflect
+     * the updated account balance and transaction history.
+     *
+     * @param withdrawField The TextField containing the amount to be withdrawn.
+     */
+    private void handleWithdraw(TextField withdrawField) {
         MainService.TransactionResult result = mainService.handleWithdraw(withdrawField.getText());
         if (result.success()) {
             showSuccessMessage(result.message());
-            withdrawField.setText("");
+            withdrawField.clear();
             refreshPage();
         } else {
             showErrorMessage(result.message());
@@ -318,132 +334,54 @@ public class MainWindow extends JFrame {
     }
 
 
-    /// Adds the transfer section to the actions panel
-    private void addTransferSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        JLabel transferLabel = createSectionLabel("3) Transfer money");
-        panel.add(transferLabel, gbc);
-        gbc.gridy++;
-
-        JTextField transferAccountField = createTextField();
-        JTextField transferAmountField = createTextField();
-        JTextField transferCommentField = createTextField();
-
-        addFieldWithLabel(panel, gbc, "Account:", transferAccountField);
-        gbc.gridy++;
-
-        addFieldWithLabel(panel, gbc, "Amount:", transferAmountField);
-        gbc.gridy++;
-
-        addFieldWithLabel(panel, gbc, "Comment:", transferCommentField);
-
-        gbc.gridx = 3;
-        transferButton = createButton("Transfer");
-        transferButton.addActionListener(_ -> handleTransfer(
-                transferAccountField, transferAmountField, transferCommentField));
-        panel.add(transferButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Adds a field with a label to the panel
-    private void addFieldWithLabel(JPanel panel, GridBagConstraints gbc, String labelText, JTextField field) {
-        gbc.gridx = 1;
-        JLabel label = new JLabel(labelText);
-        label.setFont(LABEL_FONT);
-        panel.add(label, gbc);
-
-        gbc.gridx = 2;
-        panel.add(field, gbc);
-    }
-
-
-    /// Handles the transfer action
-    private void handleTransfer(JTextField accountField, JTextField amountField, JTextField commentField) {
+    /**
+     * Handles the transfer action by interacting with the MainService to perform the transfer operation.
+     * It takes the input from the account, amount, and comment fields, processes the transfer, and provides
+     * feedback to the user based on the success or failure of the transaction. If successful, it also refreshes
+     * the page to reflect the updated account balance and transaction history.
+     *
+     * @param accountField The TextField containing the recipient account number for the transfer.
+     * @param amountField  The TextField containing the amount to be transferred.
+     * @param commentField The TextField containing any comments associated with the transfer.
+     */
+    private void handleTransfer(TextField accountField, TextField amountField, TextField commentField) {
         MainService.TransactionResult result = mainService.handleTransfer(
-                accountField.getText(),
-                amountField.getText(),
-                commentField.getText()
-        );
+                accountField.getText(), amountField.getText(), commentField.getText());
 
         if (result.success()) {
             showSuccessMessage(result.message());
-            clearFields(accountField, amountField, commentField);
+            accountField.clear();
+            amountField.clear();
+            commentField.clear();
         } else {
             showErrorMessage(result.message());
         }
-
         refreshPage();
     }
 
 
-    /// Adds sections for account management actions
-    private void addAccountManagementSection(JPanel panel, GridBagConstraints gbc) {
-        addOpenAccountSection(panel, gbc);
-        addFreezeAccountSection(panel, gbc);
-        addUnfreezeAccountSection(panel, gbc);
-        addCloseAccountSection(panel, gbc);
-    }
-
-
-    /// Adds the open account section to the actions panel
-    private void addOpenAccountSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        JLabel openAccLabel = createSectionLabel("4) Open new account");
-        panel.add(openAccLabel, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridwidth = 1;
-        JButton openButton = createButton("Open");
-        openButton.addActionListener(_ -> handleOpenAccount());
-        panel.add(openButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Handles the action of opening a new account
+    /**
+     * Handles the action of opening a new account by interacting with the MainService to perform the operation.
+     * It processes the request to open a new account and provides feedback to the user based on the success or failure
+     * of the operation. If successful, it also refreshes the account list to include the newly opened account.
+     */
     private void handleOpenAccount() {
         MainService.AccountResult result = mainService.handleOpenAccount();
         if (result.success()) {
             showSuccessMessage(result.message());
-            try {
-                // Refresh the accounts list
-                MainService.AccountListResult accountsResult = mainService.getUserAccounts();
-                if (accountsResult.success()) {
-                    currentUser.clearAccounts();
-                    currentUser.addAllAccounts(accountsResult.accounts());
-                    updateAccountSelector();
-                }
-            } catch (SQLException ex) {
-                showErrorMessage("Error refreshing accounts: " + ex.getMessage());
-            }
+            handleRefreshAccounts();
         } else {
             showErrorMessage(result.message());
         }
     }
 
 
-    /// Adds the freeze account section to the actions panel
-    private void addFreezeAccountSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        JLabel freezeLabel = createSectionLabel("5) Freeze current account");
-        panel.add(freezeLabel, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridwidth = 1;
-        freezeButton = createButton("Freeze");
-        freezeButton.addActionListener(_ -> handleFreezeAccount());
-        panel.add(freezeButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Handles the action of freezing the current account
+    /**
+     * Handles the action of freezing the current account by interacting with the MainService to perform the operation.
+     * It processes the request to freeze the account and provides feedback to the user based on the success or failure
+     * of the operation. If successful, it also updates the current account's status to frozen and refreshes the page
+     * to reflect the changes in available actions and transaction history.
+     */
     private void handleFreezeAccount() {
         MainService.AccountResult result = mainService.handleFreezeAccount();
         if (result.success()) {
@@ -456,24 +394,12 @@ public class MainWindow extends JFrame {
     }
 
 
-    /// Adds the unfreeze account section to the actions panel
-    private void addUnfreezeAccountSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        JLabel unfreezeLabel = createSectionLabel("6) Unfreeze account");
-        panel.add(unfreezeLabel, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridwidth = 1;
-        unfreezeButton = createButton("Unfreeze");
-        unfreezeButton.addActionListener(_ -> handleUnfreezeAccount());
-        panel.add(unfreezeButton, gbc);
-
-        gbc.gridy++;
-    }
-
-
-    /// Handles the action of unfreezing the current account
+    /**
+     * Handles the action of unfreezing the current account by interacting with the MainService to perform the operation.
+     * It processes the request to unfreeze the account and provides feedback to the user based on the success or failure
+     * of the operation. If successful, it also updates the current account's status to active and refreshes the page
+     * to reflect the changes in available actions and transaction history.
+     */
     private void handleUnfreezeAccount() {
         MainService.AccountResult result = mainService.handleUnfreezeAccount();
         if (result.success()) {
@@ -486,199 +412,156 @@ public class MainWindow extends JFrame {
     }
 
 
-    /// Adds the close account section to the actions panel
-    private void addCloseAccountSection(JPanel panel, GridBagConstraints gbc) {
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        JLabel closeAccLabel = createSectionLabel("7) Close account");
-        panel.add(closeAccLabel, gbc);
-
-        gbc.gridx = 2;
-        gbc.gridwidth = 1;
-        JButton closeButton = createButton("Close");
-        closeButton.addActionListener(_ -> handleCloseAccount());
-        panel.add(closeButton, gbc);
-    }
-
-
-    /// Handles the action of closing the current account
+    /**
+     * Handles the action of closing the current account by interacting with the MainService to perform the operation.
+     * It checks if there are any accounts available to close and confirms the user's intention to close the account.
+     * If it's the last account, it also informs the user that their profile will be deleted. Based on the success or failure
+     * of the operation, it provides feedback to the user and updates the account list and page accordingly.
+     */
     private void handleCloseAccount() {
-        try {
-            if (currentUser.getAccounts().isEmpty()) {
-                showErrorMessage("No accounts available to close.");
-                return;
-            }
+        if (currentUser.getAccounts().isEmpty()) {
+            showErrorMessage("No accounts available to close.");
+            return;
+        }
 
-            boolean isLastAccount = currentUser.getAccounts().size() == 1;
-            String confirmMessage = isLastAccount ?
-                    "Are you sure you want to close this account?\nThis will also delete your user profile as it's the last account." :
-                    "Are you sure you want to close this account?";
+        boolean isLastAccount = currentUser.getAccounts().size() == 1;
+        String confirmMessage = isLastAccount ?
+                "Are you sure you want to close this account?\nThis will also delete your user profile as it's the last account." :
+                "Are you sure you want to close this account?";
 
-            if (confirmAction(confirmMessage)) {
-                MainService.AccountResult result = mainService.handleCloseAccount();
-                if (result.success()) {
-                    showSuccessMessage(result.message());
-                    if (isLastAccount) {
-                        dispose();
-                        MainService.NavigationResult navResult = mainService.navigateToLoginWindow();
-                        if (!navResult.success()) {
-                            showErrorMessage("Error navigating to login: " + navResult.errorMessage());
-                        }
-                    } else {
-                        currentUser.getAccounts().remove(currentAccount);
-                        updateAccountSelector();
+        if (confirmAction(confirmMessage)) {
+            MainService.AccountResult result = mainService.handleCloseAccount();
+            if (result.success()) {
+                showSuccessMessage(result.message());
+                if (isLastAccount) {
+                    close();
+                    MainService.NavigationResult navResult = mainService.navigateToLoginWindow();
+                    if (!navResult.success()) {
+                        showErrorMessage("Error navigating to login: " + navResult.errorMessage());
                     }
                 } else {
-                    showErrorMessage(result.message());
+                    currentUser.getAccounts().remove(currentAccount);
+                    handleRefreshAccounts();
                 }
-            }
-        } catch (SQLException ex) {
-            showErrorMessage("Database error while closing the account.");
-        }
-    }
-
-
-    /// Creates a section label with a specific font
-    private JLabel createSectionLabel(String text) {
-        JLabel label = new JLabel(text);
-        label.setFont(SECTION_FONT);
-        return label;
-    }
-
-
-    /// Creates a text field with a preferred size
-    private JTextField createTextField() {
-        JTextField field = new JTextField();
-        field.setPreferredSize(TEXT_FIELD_SIZE);
-        return field;
-    }
-
-
-    /// Creates a button with a specific text and font
-    private JButton createButton(String text) {
-        JButton button = new JButton(text);
-        button.setFont(BUTTON_FONT);
-        button.setPreferredSize(BUTTON_SIZE);
-        return button;
-    }
-
-
-    /// Shows an error message dialog
-    private void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
-    }
-
-
-    /// Shows a success message dialog
-    private void showSuccessMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Success", JOptionPane.INFORMATION_MESSAGE);
-    }
-
-
-    /// Confirms an action with the user
-    private boolean confirmAction(String message) {
-        return JOptionPane.showConfirmDialog(this, message, "Confirm Action",
-                JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION;
-    }
-
-
-    /// Clears the text fields
-    private void clearFields(JTextField... fields) {
-        for (JTextField field : fields)
-            field.setText("");
-    }
-
-
-    /// Refresh account selector and UI
-    public void updateAccountSelector() throws SQLException {
-        MainService.AccountListResult accountsResult = mainService.getUserAccounts();
-        if (accountsResult.success()) {
-            List<Account> updatedAccounts = accountsResult.accounts();
-            Integer[] accountNumbers = updatedAccounts.stream().map(Account::getAccountNumber).toArray(Integer[]::new);
-            accountSelector.setModel(new DefaultComboBoxModel<>(accountNumbers));
-            if (accountNumbers.length > 0) {
-                currentAccount = updatedAccounts.getFirst();
-                mainService.setSelectedAccount(currentAccount);
             } else {
-                currentAccount = null;
+                showErrorMessage(result.message());
             }
-        } else {
-            showErrorMessage("Failed to update account selector: " + accountsResult.errorMessage());
         }
-
-        refreshPage();
     }
 
 
-    /// Loads transactions into a JTable
-    private JTable loadTransactions(Object[] headers, List<Transaction> transactions) {
-        Object[][] data = new Object[transactions.size()][5];
-        for (int i = 0; i < transactions.size(); i++) {
-            data[i][0] = transactions.get(i).sender().getAccountNumber();
-            data[i][1] = transactions.get(i).receiver().getAccountNumber();
-            data[i][2] = transactions.get(i).amount();
-            data[i][3] = transactions.get(i).comment();
-            data[i][4] = transactions.get(i).date().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        }
-
-        JTable recentTransactions = new JTable(data, headers);
-        recentTransactions.setFont(new Font("Times New Roman", Font.BOLD, 15));
-        recentTransactions.setRowHeight(30);
-
-        return recentTransactions;
+    /**
+     * Sets up the contact manager section of the main window by creating a ContactPanel and adding it to the content panel.
+     * The ContactPanel allows users to manage their contacts, including adding, viewing, and filtering contacts.
+     */
+    private void setUpContactManager() {
+        ContactPanel contactPanel = new ContactPanel();
+        contentPanel.getChildren().add(contactPanel);
     }
 
 
-    /// Creates a table that shows the user's transaction history
-    public void transactionsTable() {
-        JPanel transactionsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        JLabel transactionHistory = new JLabel("Transaction History");
-        transactionHistory.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        transactionHistory.setBorder(BorderFactory.createEmptyBorder(100, 20, 20, 20));
-        transactionsPanel.add(transactionHistory);
+    /**
+     * Sets up the transactions table in the main window, allowing users to view their transaction history.
+     * The table includes columns for sender, receiver, amount, comment, and date of each transaction.
+     * It also configures the table to automatically resize columns to fit the available space.
+     */
+    private void setUpTransactionsTable() {
+        VBox tableContainer = new VBox(10);
+        Label titleLabel = new Label("Transaction History");
+        tableContainer.getChildren().add(titleLabel);
 
-        contentPanel.add(transactionsPanel);
+        transactionsTable = new TableView<>();
+        transactionsTable.setPrefHeight(200);
 
-        Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
-        List<Transaction> transactions = currentAccount.getTransactions();
+        TableColumn<Transaction, Integer> senderCol = new TableColumn<>("Sender");
+        senderCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().sender().getAccountNumber()).asObject());
 
-        JTable recentTransactions = loadTransactions(headers, transactions);
-        recentTransactions.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        recentTransactions.getTableHeader().setReorderingAllowed(false);
+        TableColumn<Transaction, Integer> receiverCol = new TableColumn<>("Receiver");
+        receiverCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().receiver().getAccountNumber()).asObject());
 
-        contentPanel.add(new JScrollPane(recentTransactions));
+        TableColumn<Transaction, Double> amountCol = new TableColumn<>("Amount");
+        amountCol.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().amount()).asObject());
+
+        TableColumn<Transaction, String> commentCol = new TableColumn<>("Comment");
+        commentCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().comment()));
+
+        TableColumn<Transaction, String> dateCol = new TableColumn<>("Date");
+        dateCol.setCellValueFactory(data -> {
+            String formattedDate = data.getValue().date().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            return new SimpleStringProperty(formattedDate);
+        });
+
+        transactionsTable.getColumns().addAll(senderCol, receiverCol, amountCol, commentCol, dateCol);
+        transactionsTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_ALL_COLUMNS);
+
+        tableContainer.getChildren().add(transactionsTable);
+        contentPanel.getChildren().add(tableContainer);
     }
 
 
-    /// Updates the content of the transaction table real-time
-    private void updateTransactionTable() {
+    /**
+     * Updates the transaction table data by fetching the latest transactions from the MainService.
+     * If the transaction retrieval is successful, it updates the current account's transactions and refreshes the table view.
+     * If there is an error during the retrieval process, an error message is displayed to the user.
+     */
+    private void updateTransactionTableData() {
         if (currentAccount == null) return;
 
         MainService.TransactionListResult transactionsResult = mainService.getTransactions();
 
-        for (Component component : contentPanel.getComponents())
-            if (component instanceof JScrollPane)
-                contentPanel.remove(component);
-
         if (transactionsResult.success()) {
-            Object[] headers = new Object[]{"Sender", "Receiver", "Amount", "Comment", "Date"};
             List<Transaction> transactions = transactionsResult.transactions();
             currentAccount.setTransactions(transactions);
 
-            JTable recentTransactions = loadTransactions(headers, transactions);
-            recentTransactions.getTableHeader().setReorderingAllowed(false);
-
-            contentPanel.add(new JScrollPane(recentTransactions));
+            ObservableList<Transaction> observableTransactions = FXCollections.observableArrayList(transactions);
+            transactionsTable.setItems(observableTransactions);
         } else {
             showErrorMessage("Error updating transactions: " + transactionsResult.errorMessage());
         }
     }
 
 
-    /// Sets up the contact manager section using the ContactPanel component
-    private void setUpContactManager() {
-        ContactPanel contactPanel = new ContactPanel(this);
-        contentPanel.add(contactPanel);
+    /**
+     * Displays an error message in an alert dialog with the specified message.
+     *
+     * @param message The error message to be displayed in the alert dialog.
+     */
+    private void showErrorMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
+
+    /**
+     * Displays a success message in an alert dialog with the specified message.
+     *
+     * @param message The success message to be displayed in the alert dialog.
+     */
+    private void showSuccessMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Success");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+
+    /**
+     * Displays a confirmation dialog with the specified message and returns true if the user confirms the action.
+     *
+     * @param message The confirmation message to be displayed in the dialog.
+     * @return true if the user clicks "OK" to confirm the action, false otherwise.
+     */
+    private boolean confirmAction(String message) {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Confirm Action");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        return result.isPresent() && result.get() == ButtonType.OK;
+    }
 }

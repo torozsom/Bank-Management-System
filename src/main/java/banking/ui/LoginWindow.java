@@ -1,9 +1,13 @@
 package banking.ui;
 
 import banking.service.LoginService;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
 
-import javax.swing.*;
-import java.awt.*;
 import java.sql.SQLException;
 
 
@@ -11,116 +15,99 @@ import java.sql.SQLException;
  * LoginWindow class represents the login window of the banking application.
  * It allows users to enter their email and password to log in or navigate to the registration window.
  */
-public class LoginWindow extends JFrame {
+public class LoginWindow extends Stage {
 
     private final LoginService loginService;
 
-    private final JTextField emailField;
-    private final JPasswordField passwordField;
+    private final TextField emailField;
+    private final PasswordField passwordField;
 
 
-    /// Creates and shows the login window of the app.
+    /**
+     * Constructor initializes the login window, sets up the UI components,
+     * and defines the event handlers for the login and register buttons.
+     *
+     * @throws SQLException if there is an error initializing the LoginService or connecting to the database.
+     */
     public LoginWindow() throws SQLException {
 
         loginService = new LoginService();
 
         setTitle("Bank Account - Login");
-        setSize(800, 500);
-        setLocationRelativeTo(null);
         setResizable(false);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        Image icon = Toolkit.getDefaultToolkit().getImage("icon.png");
-        setIconImage(icon);
 
+        GridPane gridPane = new GridPane();
+        gridPane.setAlignment(Pos.CENTER);
+        gridPane.setHgap(10);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(25, 25, 25, 25));
 
-        JPanel contentPanel = new JPanel(new GridBagLayout());
-        contentPanel.setBackground(Color.LIGHT_GRAY);
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        Label emailLabel = new Label("Email address:");
+        gridPane.add(emailLabel, 0, 0);
 
+        emailField = new TextField();
+        gridPane.add(emailField, 1, 0);
 
-        JLabel emailLabel = new JLabel("Email address:");
-        emailLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
-        emailLabel.setForeground(Color.BLACK);
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        contentPanel.add(emailLabel, gbc);
+        Label passwordLabel = new Label("Password:");
+        gridPane.add(passwordLabel, 0, 1);
 
+        passwordField = new PasswordField();
+        gridPane.add(passwordField, 1, 1);
 
-        emailField = new JTextField(20);
-        Dimension textFieldSize = new Dimension(300, 30);
-        emailField.setPreferredSize(textFieldSize);
-        emailField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        emailField.setFont(new Font("Times New Roman", Font.BOLD, 14));
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        contentPanel.add(emailField, gbc);
+        Button registerButton = new Button("Register");
+        gridPane.add(registerButton, 0, 2);
 
+        Button loginButton = new Button("Login");
+        gridPane.add(loginButton, 1, 2);
 
-        JLabel passwordLabel = new JLabel("Password:");
-        passwordLabel.setFont(new Font("Times New Roman", Font.BOLD, 18));
-        passwordLabel.setForeground(Color.BLACK);
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        contentPanel.add(passwordLabel, gbc);
-
-
-        passwordField = new JPasswordField(20);
-        passwordField.setPreferredSize(textFieldSize);
-        passwordField.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-        passwordField.setFont(new Font("Times New Roman", Font.BOLD, 14));
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        contentPanel.add(passwordField, gbc);
-
-
-        JButton loginButton = new JButton("Login");
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        contentPanel.add(loginButton, gbc);
-
-
-        JButton registerButton = new JButton("Register");
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        contentPanel.add(registerButton, gbc);
-
-        add(contentPanel);
-
-        //When the login button is clicked, the data entered will be authenticated
-        //Proceed to the main window when everything is validated
-        //Otherwise show warning message
-        loginButton.addActionListener(_ -> {
+        // Login button's event handler
+        loginButton.setOnAction(_ -> {
             String email = emailField.getText();
-            String password = new String(passwordField.getPassword());
+            String password = passwordField.getText();
 
             LoginService.AuthenticationResult authResult = loginService.authenticateUser(email, password);
 
             if (authResult.success()) {
                 LoginService.NavigationResult navResult = loginService.navigateToMainWindow(email);
                 if (navResult.success()) {
-                    dispose();
+                    close();
                 } else {
-                    JOptionPane.showMessageDialog(null, navResult.errorMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                    showAlert(Alert.AlertType.ERROR, "ERROR", navResult.errorMessage());
                 }
             } else {
-                JOptionPane.showMessageDialog(null, authResult.message(), "WARNING", JOptionPane.WARNING_MESSAGE);
+                showAlert(Alert.AlertType.WARNING, "WARNING", authResult.message());
             }
         });
 
-        //Proceed to the registration window when clicking the registry button
-        registerButton.addActionListener(_ -> {
+        // Registry button's event handler
+        registerButton.setOnAction(_ -> {
             LoginService.NavigationResult navResult = loginService.navigateToRegistrationWindow();
             if (navResult.success()) {
-                dispose();
+                close();
             } else {
-                JOptionPane.showMessageDialog(null, navResult.errorMessage(), "ERROR", JOptionPane.ERROR_MESSAGE);
+                showAlert(Alert.AlertType.ERROR, "ERROR", navResult.errorMessage());
             }
         });
 
-        setVisible(true);
+        // Set the scene and show the window
+        Scene scene = new Scene(gridPane, 800, 500);
+        setScene(scene);
+        show();
     }
 
+
+    /**
+     * Utility method to show an alert dialog with the specified type, title, and message.
+     *
+     * @param alertType the type of the alert (e.g., ERROR, WARNING, INFORMATION).
+     * @param title     the title of the alert dialog.
+     * @param message   the content message of the alert dialog.
+     */
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
 }

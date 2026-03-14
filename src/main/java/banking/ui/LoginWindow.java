@@ -1,14 +1,14 @@
 package banking.ui;
 
 import banking.service.LoginService;
-import javafx.geometry.Insets;
+import javafx.geometry.HPos;import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.stage.Stage;
+import javafx.scene.layout.StackPane;import javafx.stage.Stage;
 
-import java.sql.SQLException;
+import java.sql.SQLException;import java.util.Objects;
 
 
 /**
@@ -36,29 +36,50 @@ public class LoginWindow extends Stage {
         setTitle("Bank Account - Login");
         setResizable(false);
 
+        StackPane root = new StackPane();
+        root.setPadding(new Insets(50));
+
         GridPane gridPane = new GridPane();
+        gridPane.getStyleClass().add("login-card");
         gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setPadding(new Insets(25, 25, 25, 25));
+        gridPane.setMaxWidth(400);
+        gridPane.setMaxHeight(350);
+        gridPane.setHgap(15);
+        gridPane.setVgap(15);
+
+        Label titleLabel = new Label("Welcome Back!");
+        titleLabel.getStyleClass().add("title-label");
+        GridPane.setHalignment(titleLabel, HPos.CENTER);
+        gridPane.add(titleLabel, 0, 0, 2, 1);
 
         Label emailLabel = new Label("Email address:");
-        gridPane.add(emailLabel, 0, 0);
+        gridPane.add(emailLabel, 0, 1);
 
         emailField = new TextField();
-        gridPane.add(emailField, 1, 0);
+        emailField.setPromptText("Enter your email");
+        emailField.setMinWidth(300);
+        gridPane.add(emailField, 0, 2, 2, 1);
 
         Label passwordLabel = new Label("Password:");
-        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordLabel, 0, 3);
 
         passwordField = new PasswordField();
-        gridPane.add(passwordField, 1, 1);
+        passwordField.setPromptText("Enter your password");
+        passwordField.setMinWidth(300);
+        gridPane.add(passwordField, 0, 4, 2, 1);
 
         Button registerButton = new Button("Register");
-        gridPane.add(registerButton, 0, 2);
+        registerButton.getStyleClass().addAll("button", "register-button");
+
+        registerButton.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(registerButton, 0, 5);
 
         Button loginButton = new Button("Login");
-        gridPane.add(loginButton, 1, 2);
+        loginButton.getStyleClass().addAll("button", "login-button");
+        loginButton.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(loginButton, 1, 5);
+
+        root.getChildren().add(gridPane);
 
         // Login button's event handler
         loginButton.setOnAction(_ -> {
@@ -89,8 +110,17 @@ public class LoginWindow extends Stage {
             }
         });
 
-        // Set the scene and show the window
-        Scene scene = new Scene(gridPane, 800, 500);
+        // Create and set the scene
+        Scene scene = new Scene(root, 800, 500);
+
+        // Load CSS
+        try {
+            String cssPath = Objects.requireNonNull(getClass().getResource("/login-styles.css")).toExternalForm();
+            scene.getStylesheets().add(cssPath);
+        } catch (NullPointerException e) {
+            System.err.println("Warning: style.css not found in resources folder!");
+        }
+
         setScene(scene);
         show();
     }

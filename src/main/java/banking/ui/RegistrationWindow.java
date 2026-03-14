@@ -5,10 +5,12 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
+import java.util.Objects;
 
 
 /**
@@ -37,6 +39,7 @@ public class RegistrationWindow extends Stage {
         registrationService = new RegistrationService();
 
         setTitle("Bank Account - Registration");
+        this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(false);
 
         GridPane gridPane = new GridPane();

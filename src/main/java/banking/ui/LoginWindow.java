@@ -1,14 +1,18 @@
 package banking.ui;
 
 import banking.service.LoginService;
-import javafx.geometry.HPos;import javafx.geometry.Insets;
+import javafx.geometry.HPos;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;import javafx.stage.Stage;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
-import java.sql.SQLException;import java.util.Objects;
+import java.sql.SQLException;
+import java.util.Objects;
 
 
 /**
@@ -34,6 +38,7 @@ public class LoginWindow extends Stage {
         loginService = new LoginService();
 
         setTitle("Bank Account - Login");
+        this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(false);
 
         StackPane root = new StackPane();

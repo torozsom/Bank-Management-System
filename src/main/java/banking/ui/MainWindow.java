@@ -13,6 +13,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -21,6 +22,7 @@ import javafx.stage.Stage;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 
@@ -70,6 +72,7 @@ public class MainWindow extends Stage {
         }
 
         setTitle(email);
+        this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(false);
 
         VBox root = new VBox();
@@ -356,7 +359,6 @@ public class MainWindow extends Stage {
         } else {
             showErrorMessage(result.message());
         }
-        refreshPage();
     }
 
 
@@ -546,6 +548,7 @@ public class MainWindow extends Stage {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+        refreshPage();
     }
 
 

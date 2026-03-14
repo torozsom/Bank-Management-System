@@ -476,16 +476,24 @@ public class MainWindow extends Stage {
         transactionsTable.setPrefHeight(200);
 
         TableColumn<Transaction, Integer> senderCol = new TableColumn<>("Sender");
-        senderCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().sender().getAccountNumber()).asObject());
+        senderCol.setCellValueFactory(data ->
+                new SimpleIntegerProperty(data.getValue().sender().getAccountNumber()).asObject()
+        );
 
         TableColumn<Transaction, Integer> receiverCol = new TableColumn<>("Receiver");
-        receiverCol.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().receiver().getAccountNumber()).asObject());
+        receiverCol.setCellValueFactory(data ->
+                new SimpleIntegerProperty(data.getValue().receiver().getAccountNumber()).asObject()
+        );
 
         TableColumn<Transaction, Double> amountCol = new TableColumn<>("Amount");
-        amountCol.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().amount()).asObject());
+        amountCol.setCellValueFactory(data ->
+                new SimpleDoubleProperty(data.getValue().amount()).asObject()
+        );
 
         TableColumn<Transaction, String> commentCol = new TableColumn<>("Comment");
-        commentCol.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().comment()));
+        commentCol.setCellValueFactory(data ->
+                new SimpleStringProperty(data.getValue().comment())
+        );
 
         TableColumn<Transaction, String> dateCol = new TableColumn<>("Date");
         dateCol.setCellValueFactory(data -> {

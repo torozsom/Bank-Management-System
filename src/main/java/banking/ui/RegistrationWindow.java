@@ -1,12 +1,14 @@
 package banking.ui;
 
 import banking.service.RegistrationService;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 import java.sql.SQLException;
@@ -42,35 +44,57 @@ public class RegistrationWindow extends Stage {
         this.getIcons().add(new Image(Objects.requireNonNull(getClass().getResourceAsStream("/icon.png"))));
         setResizable(false);
 
+        StackPane root = new StackPane();
+        root.setPadding(new Insets(50));
+
         GridPane gridPane = new GridPane();
+        gridPane.getStyleClass().add("register-card");
         gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
-        gridPane.setPadding(new Insets(25, 25, 25, 25));
+        gridPane.setMaxWidth(450);
+        gridPane.setMaxHeight(400);
+        gridPane.setHgap(15);
+        gridPane.setVgap(15);
+
+        Label titleLabel = new Label("Create Account");
+        titleLabel.getStyleClass().add("title-label");
+        GridPane.setHalignment(titleLabel, HPos.CENTER);
+        gridPane.add(titleLabel, 0, 0, 2, 1);
 
         Label emailLabel = new Label("Email:");
-        gridPane.add(emailLabel, 0, 0);
+        gridPane.add(emailLabel, 0, 1);
 
         emailField = new TextField();
-        gridPane.add(emailField, 1, 0);
+        emailField.setMinWidth(250);
+        emailField.setPromptText("Enter your email");
+        gridPane.add(emailField, 1, 1);
 
         Label passwordLabel = new Label("Password:");
-        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordLabel, 0, 2);
 
         passwordField = new PasswordField();
-        gridPane.add(passwordField, 1, 1);
+        passwordField.setMinWidth(250);
+        passwordField.setPromptText("Create a password");
+        gridPane.add(passwordField, 1, 2);
 
-        Label confirmPasswordLabel = new Label("Confirm Password:");
-        gridPane.add(confirmPasswordLabel, 0, 2);
+        Label confirmPasswordLabel = new Label("Confirm Pwd:");
+        gridPane.add(confirmPasswordLabel, 0, 3);
 
         confirmPasswordField = new PasswordField();
-        gridPane.add(confirmPasswordField, 1, 2);
+        confirmPasswordField.setMinWidth(250);
+        confirmPasswordField.setPromptText("Confirm your password");
+        gridPane.add(confirmPasswordField, 1, 3);
 
         Button closeButton = new Button("Close");
-        gridPane.add(closeButton, 0, 3);
+        closeButton.getStyleClass().addAll("button", "close-button");
+        closeButton.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(closeButton, 0, 4);
 
         Button signUpButton = new Button("Sign Up");
-        gridPane.add(signUpButton, 1, 3);
+        signUpButton.getStyleClass().addAll("button", "signup-button");
+        signUpButton.setMaxWidth(Double.MAX_VALUE);
+        gridPane.add(signUpButton, 1, 4);
+
+        root.getChildren().add(gridPane);
 
 
         // Sign up button's event handler
@@ -105,7 +129,16 @@ public class RegistrationWindow extends Stage {
         });
 
         // Set the scene and show the window
-        Scene scene = new Scene(gridPane, 800, 500);
+        Scene scene = new Scene(root, 800, 500);
+
+        // Load CSS
+        try {
+            String cssPath = Objects.requireNonNull(getClass().getResource("/register-styles.css")).toExternalForm();
+            scene.getStylesheets().add(cssPath);
+        } catch (NullPointerException e) {
+            System.err.println("Warning: register-styles.css not found in resources folder!");
+        }
+
         setScene(scene);
         show();
     }

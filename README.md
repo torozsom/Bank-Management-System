@@ -12,8 +12,14 @@ A comprehensive **Java-based Bank Management System** featuring modern architect
 
 ---
 
+# 🖼️ Screenshots
+
 <p align="center">
-  <img src="assets/main-window.png" width="700">
+  <img src="assets/main-window1.png" width="700">
+</p>
+
+<p align="center">
+  <img src="assets/main-window2.png" width="700">
 </p>
 
 <p align="center">
@@ -23,6 +29,8 @@ A comprehensive **Java-based Bank Management System** featuring modern architect
 <p align="center">
   <img src="assets/register-window.png" width="600">
 </p>
+
+---
 
 ## 🌟 Features
 

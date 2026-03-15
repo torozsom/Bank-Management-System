@@ -1,6 +1,5 @@
 package banking;
 
-import banking.data.DatabaseManager;
 import banking.data.UserManager;
 import banking.model.User;
 import org.junit.jupiter.api.AfterEach;
@@ -17,14 +16,8 @@ class UserManagerTest {
 
     private UserManager userManager;
 
-    @org.junit.jupiter.api.AfterAll
-    static void tearDownAll() throws SQLException {
-        // Close the database connection
-        DatabaseManager.getInstance().closeConnection();
-    }
-
     @BeforeEach
-    void setUp() throws SQLException {
+    void setUp() {
         userManager = new UserManager();
     }
 

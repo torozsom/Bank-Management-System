@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TransactionManagerTest {
 
-    private Connection connection;
     private TransactionManager transactionManager;
     private Account senderAccount;
     private Account receiverAccount;
@@ -33,7 +31,7 @@ class TransactionManagerTest {
 
     @BeforeAll
     void setupDatabase() throws SQLException {
-        connection = DriverManager.getConnection("jdbc:sqlite:config/Banking.db");
+        Connection connection = DatabaseManager.getInstance().getConnection();
         UserManager userManager = new UserManager();
         AccountManager accountManager = new AccountManager();
         transactionManager = new TransactionManager();
@@ -112,13 +110,12 @@ class TransactionManagerTest {
 
     @AfterAll
     void teardown() throws SQLException {
-        try (Statement statement = connection.createStatement()) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            Statement statement = connection.createStatement();
             statement.executeUpdate("DELETE FROM Transactions");
             statement.executeUpdate("DELETE FROM Accounts");
             statement.executeUpdate("DELETE FROM Users");
         }
-
-        DatabaseManager.getInstance().closeConnection();
     }
 
 }

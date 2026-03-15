@@ -1,7 +1,6 @@
 package banking;
 
 import banking.data.AccountManager;
-import banking.data.DatabaseManager;
 import banking.data.UserManager;
 import banking.model.Account;
 import banking.model.User;
@@ -40,7 +39,6 @@ class AccountManagerTest {
             accountManager.deleteAccount(account);
 
         userManager.deleteUser(testUser.getEmail());
-        DatabaseManager.getInstance().closeConnection();
     }
 
 

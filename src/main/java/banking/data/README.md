@@ -17,7 +17,7 @@ business logic and data persistence. It handles two types of storage:
 
 | Class                                        | Purpose                          | Storage Type |
 |----------------------------------------------|----------------------------------|--------------|
-| [`DatabaseManager`](#-databasemanager)       | Database connection management   | SQLite       |
+| [`DatabaseManager`](#-databasemanager)       | Database connection management   | SQLite (Pooled) |
 | [`UserManager`](#-usermanager)               | User operations & authentication | SQLite       |
 | [`AccountManager`](#-accountmanager)         | Account management & operations  | SQLite       |
 | [`TransactionManager`](#-transactionmanager) | Transaction history & processing | SQLite       |
@@ -45,37 +45,31 @@ ContactManager (Independent - File-based)
 
 ### 🗄️ DatabaseManager
 
-**Purpose**: Centralized database connection management using the Singleton pattern.
+**Purpose**: Centralized database connection management using `SQLiteDataSource`.
 
 **Key Features**:
 
-- Single point of database access
-- **Thread-safe connection management with synchronization**
-- **Automatic connection validation and recovery**
-- **Foreign key constraints enabled for data integrity**
-- **Connection timeout configuration (30 seconds)**
-- SQLite database integration
+- **Pooled connection management via `SQLiteDataSource`**
+- **Efficient resource cleanup using try-with-resources**
+- **Automatic connection validation**
+- Foreign key constraints enabled for data integrity
+- Connection busy timeout configuration (30 seconds)
 - Thread-safe singleton implementation
 
 **Usage Example**:
 
 ```java
-try{
-DatabaseManager dbManager = DatabaseManager.getInstance();
-Connection conn = dbManager.getConnection();
-// Use connection for database operations
-}catch(
-SQLException e){
-        System.err.
-
-println("Database connection failed: "+e.getMessage());
-        }
+try (Connection conn = DatabaseManager.getInstance().getConnection()) {
+    // Use connection for database operations
+} catch (SQLException e) {
+    System.err.println("Database connection failed: " + e.getMessage());
+}
 ```
 
 **Important Methods**:
 
 - `getInstance()`: Gets the singleton instance
-- `getConnection()`: Returns the database connection
+- `getConnection()`: Returns a fresh database connection (must be closed by caller)
 - `closeConnection()`: Safely closes the connection
 
 ---
@@ -141,8 +135,10 @@ management.
 **Key Features**:
 
 - Account creation and management
-- **Atomic database operations to prevent race conditions**
-- **Database-level validation for frozen accounts and balances**
+- **Transaction-safe money transfers using database transactions**
+- **Connection pooling support for high concurrency**
+- Atomic database operations to prevent race conditions
+- Database-level validation for frozen accounts and balances
 - Money operations (deposit, withdraw, transfer)
 - Account status control (freeze/unfreeze)
 - **Transaction safety with rollback support**

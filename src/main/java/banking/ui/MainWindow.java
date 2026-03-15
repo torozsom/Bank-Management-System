@@ -134,14 +134,7 @@ public class MainWindow extends Stage {
         });
 
         MenuItem exitItem = new MenuItem("Exit");
-        exitItem.setOnAction(_ -> {
-            try {
-                DatabaseManager.getInstance().closeConnection();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            System.exit(0);
-        });
+        exitItem.setOnAction(_ -> System.exit(0));
 
         fileMenu.getItems().addAll(logOutItem, new SeparatorMenuItem(), exitItem);
         menuBar.getMenus().add(fileMenu);

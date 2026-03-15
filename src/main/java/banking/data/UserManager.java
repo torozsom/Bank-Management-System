@@ -25,17 +25,13 @@ public class UserManager {
     public static final String SERVICE_REGEX = "^[a-z]+$";
     public static final String DOMAIN_REGEX = "^[a-z]{2,}$";
 
-    private final Connection connection;
     private final SecureRandom secureRandom;
 
 
     /**
-     * Constructor that initializes the connection to the database.
-     *
-     * @throws SQLException when connection is unsuccessful
+     * Initializes the SecureRandom instance for generating salts.
      */
-    public UserManager() throws SQLException {
-        connection = DatabaseManager.getInstance().getConnection();
+    public UserManager() {
         secureRandom = new SecureRandom();
     }
 
@@ -125,7 +121,8 @@ public class UserManager {
 
         String query = "INSERT INTO Users (email, password, datetime) VALUES (?, ?, ?)";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, user.getEmail());
             statement.setString(2, hashedPassword);
             statement.setString(3, dateOfRegistry);
@@ -149,7 +146,8 @@ public class UserManager {
     public boolean userExists(String email) throws SQLException {
         String query = "SELECT * FROM Users WHERE email = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email);
             ResultSet result = statement.executeQuery();
             return result.next();
@@ -172,7 +170,8 @@ public class UserManager {
 
         String query = "SELECT password FROM Users WHERE email = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email);
             try (ResultSet result = statement.executeQuery()) {
                 if (result.next()) {
@@ -200,7 +199,8 @@ public class UserManager {
 
         String query = "SELECT * FROM Users WHERE email = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email);
             try (ResultSet result = statement.executeQuery()) {
                 if (result.next()) {
@@ -228,7 +228,8 @@ public class UserManager {
     public boolean deleteUser(String email) throws SQLException {
         String query = "DELETE FROM Users WHERE email = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setString(1, email);
             statement.executeUpdate();
             return true;

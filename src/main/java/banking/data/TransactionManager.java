@@ -19,18 +19,14 @@ import java.util.List;
  */
 public class TransactionManager {
 
-    private final Connection connection;
     private final AccountManager accountManager;
 
 
     /**
      * Constructor for TransactionManager.
-     * Initializes the connection to the database and the AccountManager.
-     *
-     * @throws SQLException if a database access error occurs
+     * Initializes the AccountManager.
      */
-    public TransactionManager() throws SQLException {
-        connection = DatabaseManager.getInstance().getConnection();
+    public TransactionManager() {
         accountManager = new AccountManager();
     }
 
@@ -55,7 +51,8 @@ public class TransactionManager {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         String dateOfTransaction = date.format(formatter);
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, transaction.sender().getAccountNumber());
             statement.setInt(2, transaction.receiver().getAccountNumber());
             statement.setDouble(3, transaction.amount());
@@ -93,7 +90,8 @@ public class TransactionManager {
 
         List<Transaction> transactions = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, a.getAccountNumber());
             statement.setInt(2, a.getAccountNumber());
 
@@ -143,7 +141,8 @@ public class TransactionManager {
     public boolean deleteTransaction(int transactionID) throws SQLException {
         String query = "DELETE FROM Transactions WHERE transaction_id = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, transactionID);
             int affectedRows = statement.executeUpdate();
             return affectedRows > 0;

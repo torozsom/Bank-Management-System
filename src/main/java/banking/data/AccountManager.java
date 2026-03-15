@@ -17,23 +17,15 @@ import java.util.List;
  */
 public class AccountManager {
 
-    private final Connection connection;
 
-
-    /**
-     * Constructor for AccountManager that initializes the database connection.
-     *
-     * @throws SQLException when connection is unsuccessful
-     */
-    public AccountManager() throws SQLException {
-        connection = DatabaseManager.getInstance().getConnection();
-    }
+    public AccountManager() { }
 
 
     /**
      * Saves an account with its data in the database.
      *
      * @param a the account to be inserted into the table
+     * @return True if the account was successfully saved, False if an account with the same number already exists
      * @throws SQLException when connection is unsuccessful
      */
     public boolean saveAccount(Account a) throws SQLException {
@@ -42,14 +34,17 @@ public class AccountManager {
 
         String query = "INSERT INTO Accounts (user_id, account_number, balance, is_frozen) VALUES (?, ?, ?, ?)";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
+
             statement.setInt(1, a.getUserID());
             statement.setInt(2, a.getAccountNumber());
             statement.setDouble(3, a.getBalance());
             statement.setBoolean(4, a.isFrozen());
+
             statement.executeUpdate();
+            return true;
         }
-        return true;
     }
 
 
@@ -63,7 +58,8 @@ public class AccountManager {
     public boolean accountExists(int accountNumber) throws SQLException {
         String query = "SELECT * FROM Accounts WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, accountNumber);
             ResultSet result = statement.executeQuery();
             return result.next();
@@ -72,17 +68,34 @@ public class AccountManager {
 
 
     /**
-     * Searches for an account based on account number in the
+     * Searches for an account based on the given account number in the
      * database and returns it with all its data as an object.
      *
-     * @param accountNumber the number that is searched for
-     * @return an Account object with the given account number
+     * @param accountNumber the account number that is being searched for
+     * @return the Account object if found, or null if not found
      * @throws SQLException when connection is unsuccessful
      */
     public Account loadAccount(int accountNumber) throws SQLException {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            return loadAccountInternal(connection, accountNumber);
+        }
+    }
+
+
+    /**
+     * Internal method to load an account using an existing database connection.
+     * This allows for more efficient loading when multiple accounts need to be loaded
+     * within the same transaction or operation.
+     *
+     * @param connection    the existing database connection to use
+     * @param accountNumber the account number to load
+     * @return the Account object if found, or null if not found
+     * @throws SQLException when a database error occurs
+     */
+    private Account loadAccountInternal(Connection connection, int accountNumber) throws SQLException {
         String query = "SELECT * FROM Accounts WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (PreparedStatement statement = connection.prepareStatement(query);) {
             statement.setInt(1, accountNumber);
             ResultSet result = statement.executeQuery();
 
@@ -112,7 +125,8 @@ public class AccountManager {
         String query = "SELECT * FROM Accounts WHERE user_id = ?";
         List<Account> accounts = new ArrayList<>();
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, user_id);
 
             try (ResultSet result = statement.executeQuery()) {
@@ -146,7 +160,8 @@ public class AccountManager {
         // Use atomic database operation with frozen check
         String query = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ? AND is_frozen = 0";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setDouble(1, amount);
             statement.setInt(2, acc.getAccountNumber());
             int rowsAffected = statement.executeUpdate();
@@ -156,7 +171,7 @@ public class AccountManager {
                 acc.deposit(amount);
             } else {
                 // Check if account exists and is frozen to provide specific error message
-                Account currentAccount = loadAccount(acc.getAccountNumber());
+                Account currentAccount = loadAccountInternal(connection, acc.getAccountNumber());
 
                 if (currentAccount == null)
                     throw new IllegalArgumentException("Account does not exist");
@@ -185,7 +200,8 @@ public class AccountManager {
         // Use atomic database operation with balance and frozen checks
         String query = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ? AND balance >= ? AND is_frozen = 0";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setDouble(1, amount);
             statement.setInt(2, acc.getAccountNumber());
             statement.setDouble(3, amount);
@@ -196,7 +212,7 @@ public class AccountManager {
                 acc.withdraw(amount);
             } else {
                 // Check specific failure reason to provide appropriate error message
-                Account currentAccount = loadAccount(acc.getAccountNumber());
+                Account currentAccount = loadAccountInternal(connection, acc.getAccountNumber());
 
                 if (currentAccount == null)
                     throw new IllegalArgumentException("Account does not exist");
@@ -213,82 +229,72 @@ public class AccountManager {
 
 
     /**
-     * Transfers the specified amount from one account to another.
-     * Uses atomic database operations within a transaction to prevent race conditions.
+     * Transfers the specified amount from the source account to the destination account.
+     * Uses a single transaction to ensure atomicity and prevent race conditions.
      *
-     * @param sourceAccount      the source account number
-     * @param destinationAccount the destination account number
-     * @param amount             the amount to transfer
-     * @throws SQLException             when a database error occurs
-     * @throws IllegalArgumentException if the amount is not positive, accounts are the same,
-     *                                  accounts don't exist, insufficient funds, or either account is frozen
+     * @param sourceAccount the account number to transfer from
+     * @param destinationAccount the account number to transfer to
+     * @param amount the amount to transfer
+     * @throws SQLException when a database error occurs
      */
     public void transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {
         if (amount <= 0)
             throw new IllegalArgumentException("Transfer amount must be positive");
-
         if (sourceAccount == destinationAccount)
             throw new IllegalArgumentException("Source and destination accounts cannot be the same");
 
-        // Use atomic operations within transaction with all validations in SQL
         String deductQuery = "UPDATE Accounts SET balance = balance - ? WHERE account_number = ? AND balance >= ? AND is_frozen = 0";
         String addQuery = "UPDATE Accounts SET balance = balance + ? WHERE account_number = ? AND is_frozen = 0";
 
-        try {
-            connection.setAutoCommit(false);
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            connection.setAutoCommit(false); // Start Transaction
 
-            // First, deduct from source account with atomic validation
-            try (PreparedStatement deductStatement = connection.prepareStatement(deductQuery)) {
-                deductStatement.setDouble(1, amount);
-                deductStatement.setInt(2, sourceAccount);
-                deductStatement.setDouble(3, amount);
-                int sourceRowsAffected = deductStatement.executeUpdate();
+            try {
+                // Perform Deduction
+                try (PreparedStatement deductStmt = connection.prepareStatement(deductQuery)) {
+                    deductStmt.setDouble(1, amount);
+                    deductStmt.setInt(2, sourceAccount);
+                    deductStmt.setDouble(3, amount);
 
-                if (sourceRowsAffected == 0) {
-                    connection.rollback();
-                    // Determine specific failure reason
-                    Account source = loadAccount(sourceAccount);
-                    if (source == null)
-                        throw new IllegalArgumentException("Source account does not exist");
-
-                    if (source.isFrozen())
-                        throw new IllegalArgumentException("Cannot transfer from a frozen account");
-
-                    if (source.getBalance() < amount)
-                        throw new IllegalArgumentException("Insufficient funds in source account");
-
-                    throw new IllegalArgumentException("Transfer failed: source account validation failed");
+                    int rows = deductStmt.executeUpdate();
+                    if (rows == 0) {
+                        Account src = loadAccountInternal(connection, sourceAccount);
+                        if (src == null)
+                            throw new IllegalArgumentException("Source account does not exist");
+                        if (src.isFrozen())
+                            throw new IllegalArgumentException("Cannot transfer from a frozen account");
+                        if (src.getBalance() < amount)
+                            throw new IllegalArgumentException("Insufficient funds in source account");
+                        throw new IllegalArgumentException("Transfer failed: source account validation failed");
+                    }
                 }
 
-                // Then, add to destination account with atomic validation
-                try (PreparedStatement addStatement = connection.prepareStatement(addQuery)) {
-                    addStatement.setDouble(1, amount);
-                    addStatement.setInt(2, destinationAccount);
-                    int destRowsAffected = addStatement.executeUpdate();
+                // Perform Addition
+                try (PreparedStatement addStmt = connection.prepareStatement(addQuery)) {
+                    addStmt.setDouble(1, amount);
+                    addStmt.setInt(2, destinationAccount);
 
-                    if (destRowsAffected == 0) {
-                        connection.rollback();
-                        // Determine specific failure reason
-                        Account destination = loadAccount(destinationAccount);
-
-                        if (destination == null)
+                    int rows = addStmt.executeUpdate();
+                    if (rows == 0) {
+                        Account dest = loadAccountInternal(connection, destinationAccount);
+                        if (dest == null)
                             throw new IllegalArgumentException("Destination account does not exist");
-
-                        if (destination.isFrozen())
+                        if (dest.isFrozen())
                             throw new IllegalArgumentException("Cannot transfer to a frozen account");
-
                         throw new IllegalArgumentException("Transfer failed: destination account validation failed");
                     }
-
-                    // Both operations successful, commit transaction
-                    connection.commit();
                 }
+
+                // Commit if both succeeded
+                connection.commit();
+
+            } catch (SQLException | IllegalArgumentException e) {
+                // Rollback on any error
+                connection.rollback();
+                throw e; // Re-throw to caller
+            } finally {
+                connection.setAutoCommit(true);
             }
-        } catch (SQLException ex) {
-            connection.rollback();
-            throw ex;
-        } finally {
-            connection.setAutoCommit(true);
         }
     }
 
@@ -302,7 +308,8 @@ public class AccountManager {
     public void freezeAccount(Account acc) throws SQLException {
         String query = "UPDATE Accounts SET is_frozen = 1 WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, acc.getAccountNumber());
             statement.executeUpdate();
         }
@@ -318,7 +325,8 @@ public class AccountManager {
     public void unfreezeAccount(Account acc) throws SQLException {
         String query = "UPDATE Accounts SET is_frozen = 0 WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, acc.getAccountNumber());
             statement.executeUpdate();
         }
@@ -334,7 +342,8 @@ public class AccountManager {
     public void deleteAccount(Account acc) throws SQLException {
         String query = "DELETE FROM Accounts WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query)) {
+        try (Connection connection = DatabaseManager.getInstance().getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(query);
             statement.setInt(1, acc.getAccountNumber());
             statement.executeUpdate();
         }

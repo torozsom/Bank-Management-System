@@ -1,6 +1,5 @@
 package banking.ui;
 
-import banking.data.DatabaseManager;
 import banking.model.Account;
 import banking.model.Transaction;
 import banking.model.User;

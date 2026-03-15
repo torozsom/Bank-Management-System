@@ -95,7 +95,7 @@ public class AccountManager {
     private Account loadAccountInternal(Connection connection, int accountNumber) throws SQLException {
         String query = "SELECT * FROM Accounts WHERE account_number = ?";
 
-        try (PreparedStatement statement = connection.prepareStatement(query);) {
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, accountNumber);
             ResultSet result = statement.executeQuery();
 
@@ -232,9 +232,9 @@ public class AccountManager {
      * Transfers the specified amount from the source account to the destination account.
      * Uses a single transaction to ensure atomicity and prevent race conditions.
      *
-     * @param sourceAccount the account number to transfer from
+     * @param sourceAccount      the account number to transfer from
      * @param destinationAccount the account number to transfer to
-     * @param amount the amount to transfer
+     * @param amount             the amount to transfer
      * @throws SQLException when a database error occurs
      */
     public void transferMoney(int sourceAccount, int destinationAccount, double amount) throws SQLException {

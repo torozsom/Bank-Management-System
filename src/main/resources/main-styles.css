@@ -66,19 +66,28 @@
     -fx-border-color: #007bff;
     -fx-text-fill: #007bff;
 }
-.btn-blue:hover { -fx-background-color: #e6f2ff; }
+
+.btn-blue:hover {
+    -fx-background-color: #e6f2ff;
+}
 
 .btn-green {
     -fx-border-color: #28a745;
     -fx-text-fill: #28a745;
 }
-.btn-green:hover { -fx-background-color: #e6f9ea; }
+
+.btn-green:hover {
+    -fx-background-color: #e6f9ea;
+}
 
 .btn-red {
     -fx-border-color: #dc3545;
     -fx-text-fill: #dc3545;
 }
-.btn-red:hover { -fx-background-color: #fdeaea; }
+
+.btn-red:hover {
+    -fx-background-color: #fdeaea;
+}
 
 .list-view {
     -fx-background-color: transparent;
@@ -120,7 +129,18 @@
     -fx-alignment: center;
 }
 
-.table-row-cell { -fx-cell-size: 35px; }
-.table-row-cell:odd { -fx-background-color: #fcfcfc; }
-.table-row-cell:even { -fx-background-color: #e3e2e2; }
-.table-row-cell:hover { -fx-background-color: #f1f3f5; }
+.table-row-cell {
+    -fx-cell-size: 35px;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: #fcfcfc;
+}
+
+.table-row-cell:even {
+    -fx-background-color: #e3e2e2;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #f1f3f5;
+}
